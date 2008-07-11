@@ -58,6 +58,7 @@ Gem.path.unshift(Merb.root / "gems")
 # OR
 # dependencies "RedCloth" => "> 3.0", "ruby-aes-cext" => "= 1.0"
 dependencies "merb_helpers", "merb-assets"
+dependency 'dm-validations', '= 0.9.1'
 
 Merb::BootLoader.after_app_loads do
   # Add dependencies here that must load after the application loads:
