@@ -1,0 +1,48 @@
+<h1>Articles controller, new action</h1>
+
+<p>Edit this file in <tt>app/views/articles/new.html.erb</tt></p>
+
+<%= error_messages_for :article %>
+
+<% form_for(@article, :action => url(:articles) ) do |f| %>
+  <p>
+    <b>Id</b><br />
+    <%= text_control :id %>
+  </p>
+
+  <p>
+    <b>Title</b><br />
+    <%= text_control :title %>
+  </p>
+
+  <p>
+    <b>Body</b><br />
+    <%= text_area_control :body %>
+  </p>
+
+  <p>
+    <b>Published at</b><br />
+    <%= text_control :published_at %>
+  </p>
+
+  <p>
+    <b>Comments allowed at</b><br />
+    <%= text_control :comments_allowed_at %>
+  </p>
+
+  <p>
+    <b>Created at</b><br />
+    <%= text_control :created_at %>
+  </p>
+
+  <p>
+    <b>Updated at</b><br />
+    <%= text_control :updated_at %>
+  </p>
+
+  <p>
+    <%= submit_button "Create" %>
+  </p>
+<% end %>
+
+<%= link_to 'Back', url(:articles) %>
