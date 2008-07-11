@@ -1,0 +1,13 @@
+---
+
+:development: &defaults
+  :adapter: sqlite3
+  :database: db/dev.db
+
+:test:
+  <<: *defaults
+  :database: db/test.db
+
+:production:
+  <<: *defaults
+  :database: db/pro.db
