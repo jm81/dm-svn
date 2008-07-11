@@ -23,7 +23,7 @@ Merb.logger.info("Compiling routes...")
 Merb::Router.prepare do |r|
   # RESTful routes
   r.resources :articles
-  r.resources :posts
+  r.resources :comments
 
   # This is the default route for /:controller/:action/:id
   # This is fine for most cases.  If you're heavily using resource-based
