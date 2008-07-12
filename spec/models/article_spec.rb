@@ -41,5 +41,68 @@ describe Article do
     Article[@article.id].should have(5).comments
     Article[@article.id].should have(3).direct_comments
   end
+  
+  describe "#published_at" do
+    it "should respond to #published?" do
+      @article.published_at = nil
+      @article.published?.should be_false
+      
+      @article.published_at = Time.now
+      @article.published?.should be_true
+      
+      @article.published_at = nil
+      @article.published?.should be_false
+    end
+
+    it "should be set by #published=" do
+      @article.published = false
+      @article.published_at.should be_nil
+      
+      @article.published = true
+      @article.published_at.should be_kind_of(DateTime)
+      
+      @article.published = false
+      @article.published_at.should be_nil
+    end
+    
+    # I managed to cause a problem with this at one point with my "Boolean
+    # Timestamp" stuff. I don't remember the details, so I'm throwing in a test
+    # to make myself feel better.
+    it "should save #published_at nil" do
+      @article.published_at = Time.now
+      @article.save
+      @article.reload_attributes(:published_at)
+      @article.published?.should be_true
+
+      @article.published_at = nil
+      @article.save
+      @article.reload_attributes(:published_at)
+      @article.published?.should be_false      
+    end
+  end
+  
+  describe "#comments_allowed_at" do
+    it "should respond to #comments_allowed?" do
+      @article.comments_allowed_at = nil
+      @article.comments_allowed?.should be_false
+      
+      @article.comments_allowed_at = Time.now
+      @article.comments_allowed?.should be_true
+      
+      @article.comments_allowed_at = nil
+      @article.comments_allowed?.should be_false      
+    end
+
+    it "should be set by #comments_allowed=" do
+      @article.comments_allowed = false
+      @article.comments_allowed_at.should be_nil
+      
+      @article.comments_allowed = true
+      @article.comments_allowed_at.should be_kind_of(DateTime)
+      
+      @article.comments_allowed = false
+      @article.comments_allowed_at.should be_nil
+    end
+  end
 
 end

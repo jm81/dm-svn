@@ -16,4 +16,16 @@ class Article
     property :created_at, DateTime
     property :updated_at, DateTime
   
+  # Set boolean from timestamp methods:
+  # - {name}?
+  # - {name}=
+  %w{published comments_allowed}.each do | col |
+    define_method("#{col}=") do |value|
+      attribute_set("#{col}_at", value ? Time.now : nil)
+    end
+
+    define_method("#{col}?") do
+      __send__("#{col}_at") ? true : false
+    end
+  end
 end
