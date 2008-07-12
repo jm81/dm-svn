@@ -61,5 +61,23 @@ describe Comment do
     
     Comment[@comment.id].should have(5).replies
   end
+  
+  it "should update updated_at time" do
+    @comment.save
+    u = @comment.updated_at
+    u.should_not be_nil
+    @comment.body = "New Body"
+    @comment.save
+    @comment.updated_at.should > u
+  end
+  
+  it "should update created_at time only on create" do
+    @comment.save
+    c = @comment.created_at
+    c.should_not be_nil
+    @comment.body = "New Body"
+    @comment.save
+    @comment.created_at.should == c
+  end
 
 end
