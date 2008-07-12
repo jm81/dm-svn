@@ -4,7 +4,7 @@ class Comment
     property :id, Integer, :serial => true
     property :author, String, :nullable => false, :length => 100
     property :email, String, :format => :email_address
-    property :body, Text, :nullable => false
+    property :body, Text, :nullable => false, :lazy => false
     property :article_id, Integer, :nullable => false
     property :parent_id, Integer
     property :created_at, DateTime
