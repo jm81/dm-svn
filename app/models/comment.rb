@@ -1,5 +1,16 @@
 class Comment
   include DataMapper::Resource
+  
+  belongs_to :article
+  
+  belongs_to :parent,
+      :class_name => 'Comment',
+      :child_key => [:parent_id]
+       
+  has n, :replies,
+      :class_name => 'Comment',
+      :child_key => [:parent_id],
+      :order => [:created_at.desc]
 
     property :id, Integer, :serial => true
     property :author, String, :nullable => false, :length => 100
