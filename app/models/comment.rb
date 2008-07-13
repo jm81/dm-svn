@@ -10,7 +10,7 @@ class Comment
   has n, :replies,
       :class_name => 'Comment',
       :child_key => [:parent_id],
-      :order => [:created_at.desc]
+      :order => [:created_at.asc]
 
     property :id, Integer, :serial => true
     property :author, String, :nullable => false, :length => 100
