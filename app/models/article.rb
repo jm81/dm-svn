@@ -22,7 +22,9 @@ class Article
   %w{published comments_allowed}.each do | col |
     define_method("#{col}=") do |value|
       value = false if (value == '0' || value == 0)
-      attribute_set("#{col}_at", value ? Time.now : nil)
+      if (!value == __send__("#{col}?"))
+        attribute_set("#{col}_at", value ? Time.now : nil)
+      end
     end
 
     define_method("#{col}?") do
