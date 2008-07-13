@@ -63,6 +63,9 @@ describe Article do
       
       @article.published = false
       @article.published_at.should be_nil
+      
+      @article.published = '0'
+      @article.published_at.should be_nil
     end
     
     # I managed to cause a problem with this at one point with my "Boolean

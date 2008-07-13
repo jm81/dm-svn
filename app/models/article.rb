@@ -18,9 +18,10 @@ class Article
   
   # Set boolean from timestamp methods:
   # - {name}?
-  # - {name}=
+  # - {name}= (must allow for '0' as this is what checkboxes may return.)
   %w{published comments_allowed}.each do | col |
     define_method("#{col}=") do |value|
+      value = false if (value == '0' || value == 0)
       attribute_set("#{col}_at", value ? Time.now : nil)
     end
 
