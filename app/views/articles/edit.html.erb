@@ -5,10 +5,6 @@
 <%= error_messages_for :article %>
 
 <% form_for(@article, :action => url(:article, @article)) do %>
-  <p>
-    <b>Id</b><br />
-    <%= text_control :id %>
-  </p>
 
   <p>
     <b>Title</b><br />
@@ -21,23 +17,13 @@
   </p>
 
   <p>
-    <b>Published at</b><br />
-    <%= text_control :published_at %>
+    <b>Published?</b><br />
+    <%= checkbox_control :published %>
   </p>
 
   <p>
-    <b>Comments allowed at</b><br />
-    <%= text_control :comments_allowed_at %>
-  </p>
-
-  <p>
-    <b>Created at</b><br />
-    <%= text_control :created_at %>
-  </p>
-
-  <p>
-    <b>Updated at</b><br />
-    <%= text_control :updated_at %>
+    <b>Comments allowed?</b><br />
+    <%= checkbox_control :comments_allowed %>
   </p>
 
   <p>

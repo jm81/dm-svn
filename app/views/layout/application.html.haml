@@ -1,0 +1,31 @@
+!!! XML
+!!! Strict
+%html{:xmlns => "http://www.w3.org/1999/xhtml", 'xml:lang' => "en-us", 'lang' => "en-us"}
+  %head
+    %title Wistle Blog
+    %meta{'http-equiv' => "content-type", 'content' => "text/html; charset=utf-8"}
+    = css_include_tag(:master)
+  %body
+
+    #container
+      #header-container
+        %h1 My Sample Wistle Blog
+        %h2 built on merb and datamapper
+        %hr
+    
+      #left-container
+        %h3
+          = link_to 'Recent Articles', url(:articles)
+        %ul
+          - Article.published(:limit => 15).each do |article|
+            %li
+              = link_to article.title, url(:article, article)
+  
+      #main-container
+        = (catch_content :for_layout)
+  
+      #footer-container
+        %hr
+        .left
+        .right merb (and most of this layout) &copy; 2007 the merb dev team
+        %p &nbsp;

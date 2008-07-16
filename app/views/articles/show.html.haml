@@ -1,0 +1,13 @@
+= partial 'article', :with => @article
+
+.spacer
+%hr
+
+%h3== #{@article.comments_count} Comments
+= link_to('Add a comment', reply_to(@article))
+
+%ul.comments
+  - @article.direct_comments.each do |comment|
+    = partial 'comments/show', :comment => comment
+
+= link_to('Back', url(:articles))
