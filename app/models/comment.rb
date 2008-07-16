@@ -21,4 +21,11 @@ class Comment
     property :created_at, DateTime
     property :updated_at, DateTime
   
+  def email=(val)
+    if val.blank?
+      attribute_set(:email, nil)
+    else
+      attribute_set(:email, val)
+    end
+  end
 end
