@@ -60,6 +60,7 @@ Gem.path.unshift(Merb.root / "gems")
 dependencies "merb_helpers", "merb-assets"
 dependency 'dm-validations', '= 0.9.1'
 dependency 'dm-timestamps', '= 0.9.1'
+dependency 'dm-aggregates', '= 0.9.1'
 
 Merb::BootLoader.after_app_loads do
   # Add dependencies here that must load after the application loads:
