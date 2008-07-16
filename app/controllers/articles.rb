@@ -2,7 +2,7 @@ class Articles < Application
   # provides :xml, :yaml, :js
 
   def index
-    @articles = Article.all
+    @articles = Article.published
     display @articles
   end
 
