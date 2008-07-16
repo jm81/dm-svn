@@ -31,4 +31,11 @@ class Article
       __send__("#{col}_at") ? true : false
     end
   end
+  
+  # Returns the numbers of comments that belong to this Article.
+  # There's probably a better way to do this.
+  def comments_count
+    Comment.count(:article_id => @article.id)
+  end
+
 end
