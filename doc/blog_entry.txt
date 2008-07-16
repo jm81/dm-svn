@@ -1,0 +1,391 @@
+So, I decided to create a blogging application. After all,
+[Typo](http://typosphere.org/) was pretty nice and I've quite happily used (and
+abused) [Mephisto](http://mephistoblog.com/) for some time. And of course,
+there's a thousand other options out there. But, over the last few years, I've
+developed a wish list, so:
+
+1. Store the actual articles in a source code repository, ideally Subversion
+   (or maybe git, but I'm much more comfortable with Subversion).
+2. Store views in the same repo as the articles (or, at least, separate from the
+   app itself. I don't have a particularly good reason for this, but point #6
+   will take care of that).
+3. Views in *anything* other than [liquid](http://www.liquidmarkup.org/). I
+   mean, I just can't stand it. I understand it's purpose and it's great and
+   all, but I wanna' write my view code in Ruby..or PHP..or VBA..or Lisp..or
+   that programming language that's all in whitespace..or... Phhbbt!
+4. By default, set up for multiple sites hosted by a single app.
+5. Easy to add content filters, like Markdown and Textile, but also including
+   my own (This is actually pretty easy in Mephisto, but again, point #6).
+6. I wanted a relatively simple but challenging project to do on my own, so I
+   mostly made up 1-5 to justify it. Hey-o!
+   
+I picked [Merb](http://merbivore.com/) for the framework and
+[DataMapper](http://datamapper.org/) for the ORM, mostly because I've been
+experimenting with these lately. In addition, they *feel* more flexible than
+Rails for doing stuff like points one and two, and because I can't stand the
+font on the DataMapper site. Hello? WTF is that? "Font-that-looks-like-I-
+designed-it-in-MS-Paint? While fending off a horde of rabid chihauhas?"
+Seriously.
+
+Oh, it's a ["humanist sans-serif typeface"](http://en.wikipedia.org/wiki/Lucida_Grande).
+Good to know.
+
+====================
+
+Anywho, I thought I'd walk you [insert your name here] through the process,
+partly because it has some fun, not-normally-tutorial-stuff aspects, partly as
+yet another intro to the rapidly changing worlds of Merb and DataMapper. 
+
+I'm also going to try to do this in discrete stages, adding elements of the
+above requirements as I go. I think that will work okay. Be agiley and s---.
+Here goes.
+
+##Generate the app
+
+NB: If you're trying on Windows...good luck. By the way, if you use a Windows
+machine, for whatever reason, [colinux](http://colinux.org/) can be your friend.
+
+1. Get the gems. See the respective sites ([Merb](http://merbivore.com/),
+   [DataMapper](http://datamapper.org/)).
+2. <code>merb-gen app wistle</code> (No, I don't know why we're calling this app
+   'wistle'. It's what I happened to type.
+
+Wow, that was too much work. But, we need to pause for some configuration. The
+file we want is **config/init.rb**. Not a lot of options, but they're well
+commented. All I'm going to do is uncomment two lines.
+<code>use_orm :datamapper</code> and <code>use_test :datamapper</code>. This
+just tells Merb that I'm using DataMapper and RSpec. I assume it uses this
+knowledge to load appropriate libraries or something. I don't really know.
+
+The other bit-o-configuration we need is database.yml. I like to stick with
+sqlite for development unless I'm intending to use features specific to a given
+database.
+
+<code>
+---
+
+:development: &defaults
+  :adapter: sqlite3
+  :database: db/dev.db
+
+:test:
+  <<: *defaults
+  :database: db/test.db
+
+:production:
+  <<: *defaults
+  :database: db/pro.db
+</code>
+
+And, before you start scaffolding, create a *db* directory if there's not one
+already.
+
+## Scaffolding
+
+Yeah, I know, scaffolding sucks, but it's a quick way to get some working code,
+because this ain't the interesting bit. First, though, what models/resources
+do I need?
+
+1. Article, for the actual articles. This one will become interesting later.
+2. Comment, for people to leave comments.
+3. Site, to specify each different site. But I'm going to leave out the
+   multi-site requirement for now, saving it for very close to the end.
+4. User? Nope, I'm not going to bother. Since I know that my article editing
+   will ultimately happen on some text editor and be committed to a Subversion
+   repository, I don't have a need for User accounts. I could add it later,
+   say, if I wanted commenters to have accounts or something. Oh, as an aside,
+   after having completed several Rails apps, the only thing interesting about
+   user accounts are the passwords. For some reason, this gets overcomplicated.
+
+So, just Article and Comment. And nothing too fancy. Note that the underscore
+in date_time matters. Otherwise, you're liable to get a constant missing error.
+Another gotcha is that an "id" field is not generated automatically.
+
+<code>
+  merb-gen resource Article 
+    id:integer
+    title:string
+    body:text
+    published_at:date_time
+    comments_allowed_at:date_time
+    created_at:date_time
+    updated_at:date_time
+
+  merb-gen resource Comment
+    id:integer
+    author:string
+    email:string
+    body:text
+    article_id:integer
+    parent_id:integer
+    created_at:date_time
+    updated_at:date_time
+</code>
+
+We have several more things to do before we can really get the app running. The
+first is routing. I understand that Merb's router is quite powerful. But, I'm
+not intending to venture there for now.
+
+I want the actual code of router.rb to look like this for now (just using REST
+routing for the two models just created). I'll update this a bit as time goes
+on.
+
+<code>
+Merb::Router.prepare do |r|
+  r.resources :articles
+  r.resources :comments
+
+  r.default_routes
+end
+</code>
+
+Next, specify that *id* is the primary key for both tables. So, in each model,
+change the line <code>property :id, Integer</code> to
+<code>property :id, Integer, :serial => true</code>, thus telling DataMapper
+that *id* is an auto-numbering primary key.
+
+Then, migrate the database. Yay, no migration files! This is probably a personal
+preference, but I really like specifying the tables fields within the model.
+
+<code> 
+	rake dm:db:automigrate
+</code>
+
+The next was a surprise to me. Apparently, *link_to* is now in the
+"merb-assets" gem and must be required explicitly ([Thanks to this article for
+the solution](http://blog.skiptree.com/?p=4). Likewise,
+"error_messages_for" is in "merb_helpers" (You may need to
+<code>gem install merb_helpers</code>). So, add to init.rb
+<code>dependencies "merb_helpers", "merb-assets"</code>.
+
+To start the app, the command is, well, *merb*. Add a "-p ####" to specify a
+port other than 3000.
+
+So, play around, check out the scaffolded code, yadda, yadda.
+
+##Clean Up the Scaffolding
+
+The next step is to get the app working like I want it, without messing with
+the storage in Subversion stuff. One thing to note is that I'm not going to
+address "look and feel" in this article. (Except sort of at the tail-end).
+I generally like to start with the models, although I don't really have an
+"approach". Oh, and I don't plan on going over specs/tests in this article,
+although I'll be writing some (probably less than some people would prefer).
+
+Anyway, first stop is making the properties in the models work just like I want
+them.
+
+1. **Validations** - I won't validate anything for the Article model because
+   editing will ultimately be done in Subversion, and, well, I generally don't
+   care to validate data that I personally will be inputting. But the Comments
+   will see some changes.
+   
+   1. First, we need 'dm-validations'. There's several places you could require
+      it (directly, in the model for example), but I'll add it as a dependency
+      in init.rb. For some reason, I had a version problem, so I specified it
+      explicitly: <code>dependency 'dm-validations', '= 0.9.1'</code>.
+   2. Then, add some options to some of the properties. Add
+      <code>:nullable => false</code> to #body, #author and #article_id;
+      also, add <code>:length => 100</code> to #author (Because I feel like it);
+      and <code>:format => :email_address</code> for #email.
+      By default, DataMapper validates based on this info. So, a
+      <code>:nullable => false</code> results in a
+      <code>validates_present</code>. Of course, you can use explicit
+      [validations](http://datamapper.org/docs/validations.html) if desired or
+      needed.
+   3. I'm not sure how to disable the format validation (for email) when no
+      address has been supplied. So, I'll customize the setter.
+      
+      <code>
+        def email=(val)
+          if val.blank?
+            attribute_set(:email, nil)
+          else
+            attribute_set(:email, val)
+          end
+        end
+      </code>
+      
+2. **Lazy Loading** - DM lazy loads Text fields by default. I don't anticipate
+   retrieving Articles or Comments without using their #body fields, so, add
+   <code>:lazy => false</code> option to the #body properties.
+   
+3. **Relationships** - Comments belong to a) an Article and b) possibly a parent
+   article. [Associations](http://datamapper.org/docs/associations.html) look a
+   bit different if you're accustomed to ActiveRecord, but nothing too weird. 
+   Here's the updates. Some of these associations have some extra options,
+   such as ordering and scope. Note particularly Article#direct_comments.
+   
+   <code>
+     class Article
+       has n, :comments
+       
+       has n, :direct_comments,
+           :class_name => 'Comment',
+           :order => [:created_at.asc],
+           :parent_id => nil
+     end
+     
+     class Comment
+       belongs_to :article
+       
+       belongs_to :parent,
+           :class_name => 'Comment',
+           :child_key => [:parent_id]
+           
+       has n, :replies,
+           :class_name => 'Comment',
+           :child_key => [:parent_id],
+           :order => [:created_at.asc]
+     end
+   </code>
+   
+   DataMapper, being relatively young, is bound to evoke some "why was that left
+   out". To its credit, I have so far come across only one. I can't figure a way
+   to do @article.comments.count . I like that relationships and Klass.all
+   returns a *DataMapper::Collection* instead of "just" an Array, but the
+   Collection object doesn't seem very powered yet. No biggee, though, we'll
+   just add a method to *Article*.
+   
+   <code>
+     def comments_count
+       Comment.count(:article_id => @article.id)
+     end
+   </code>
+   
+   This means I need to add a <code>dependency 'dm-aggregates'</code> in init.rb
+   
+4. **Auto Times** - I like the auto-updating *created_at* and *updated_at* in
+   AR. To get this in DataMapper, we just need to require "dm_timestamps".
+   <code>dependency 'dm-timestamps'</code> in init.rb is one way to do this.
+
+5. **Timestamp Booleans** - One of my favorite little tricks are timestamp
+   columns that can operate as booleans. I have two in Article *#published_at*
+   and *comments_allowed_at*. I'll want the following methods: #published? and
+   #published=(Boolean) (and similar for #comments_allowed_at. Since I might
+   add similar columns later, I'll do some meta-programming here.
+   
+   <code>
+     class Article
+       %w{published comments_allowed}.each do | col |
+         define_method("#{col}=") do |value|
+           value = false if (value == '0' || value == 0) # for checkboxes
+
+           # update only if the boolean value changed.
+           if (!value == __send__("#{col}?"))
+              attribute_set("#{col}_at", value ? Time.now : nil)
+           end
+         end
+		
+         define_method("#{col}?") do
+           __send__("#{col}_at") ? true : false
+         end
+       end
+     end
+   </code>
+   
+   *#attribute_set* is preferred to *@attribute_name=(value)* for "tracking
+   dirtiness".
+
+6. **Auto Migrate again** - <code>rake dm:db:automigrate</code>. This will take
+   care of updating the database with those :nullable => false kind of property
+   options. I think this is destructive. <code>rake dm:db:autoupgrade</code>,
+   according to rake -T, is nondestructive. But I don't have any useful data
+   yet anyway.
+
+Finally, in this "clean up the scaffolding" section, I want to look at the VC
+side of MVC. There's a few things needed to match up the controllers with the
+associations specified in the model. I'll also work on the views, although I 
+won't document any of that here. Merb, by the way, supports ERB and
+[HAML](http://haml.hamptoncatlin.com/). I assume it supports other templating
+engines; looking at the merb-haml gem, anyway, this doesn't look difficult. I'm
+going to use HAML for now, because, hey, why not add on something *else* new.
+But, the controller/routing changes. (Oh, and I'll ignore the edit and new views
+for articles; they will after all disappear shortly).
+
+1. **HAML** - Add a 'merb-haml' dependency in init.rb
+
+1. **Router** - Basically, I just want to use REST routes (for now), with
+   comment routes nested in article routes. Also, add the default route.
+   
+   <code>
+     Merb::Router.prepare do |r|
+       r.resources :articles do | article |
+         article.resources :comments
+       end
+       
+       r.match('/').to(:controller => 'articles', :action =>'index')
+     end
+  </code>
+
+2. **Contents controller** - I want to update the Contents controller to scope
+   requests by the article. The key here is a before filter. In this, I'll also
+   assign a parent Comment, if appropriate.
+   
+   <code>
+     before :assign_article_and_parent
+
+     protected
+  
+     def assign_article_and_parent
+       @article = Article[params[:article_id]]
+       raise NotFound unless @article.nil?
+       @parent = Comment.get(params[:parent_id]) unless params[:parent_id].blank?
+     end
+   </code>
+   
+   There's also some updates such as:
+   
+   <code>
+     @comment = @article.comments.first(:id => params[:id])
+   </code>
+   
+   and
+   
+   <code>
+     @comment = Comment.new
+     @article.comments << @comment
+     @parent.replies << @comment if @parent
+   </code>
+   
+   URLs also need to reflect the nested routing of comments. For example, the
+   redirect in #create becomes:
+   
+   <code>
+     redirect url(:article_comment,
+         :article_id => @article.id,
+         :comment_id => @comment.id)
+   </code>
+   
+   I also remove the edit, update and destroy actions. The only mechanism I
+   will provide for these for now is the console. This is just to avoid needing
+   an administrative area (even then, though, I'd probably just provide the
+   destroy option).
+
+3. **Articles controller** - Finally, I want to limit Articles to those already
+   published. Again, a before filter would work, but I'm just going to create
+   an Article.published method, referenced in index. I could restrict the show
+   action also to only those published, but I'll leave it for previewing, at
+   least for now.
+   
+   <code>
+     class Article
+       class << self
+         def published(options = {})
+           Article.all(options.merge(
+               :conditions => ["published_at >= time('now')"],
+               :order => [:published_at.desc]))
+         end
+       end
+     end
+   </code>
+
+##One Site Subversion
+
+##Body Filters
+
+  - Filter comments
+
+##Multi Site models
+
+##Multi Site views (and helpers)
