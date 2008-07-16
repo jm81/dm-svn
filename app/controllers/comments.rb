@@ -1,13 +1,13 @@
 class Comments < Application
   # provides :xml, :yaml, :js
+  before :assign_article_and_parent
 
   def index
-    @comments = Comment.all
-    display @comments
+    redirect url(:article, @article)
   end
 
   def show
-    @comment = Comment.get(params[:id])
+    @comment = @article.comments.first(:id => params[:id])
     raise NotFound unless @comment
     display @comment
   end
@@ -18,40 +18,25 @@ class Comments < Application
     render
   end
 
-  def edit
-    only_provides :html
-    @comment = Comment.get(params[:id])
-    raise NotFound unless @comment
-    render
-  end
-
   def create
     @comment = Comment.new(params[:comment])
+    @article.comments << @comment
+    @parent.replies << @comment if @parent
     if @comment.save
-      redirect url(:comment, @comment)
+      redirect url(:article_comment,
+          :article_id => @article.id,
+          :comment_id => @comment.id)
     else
       render :new
     end
   end
-
-  def update
-    @comment = Comment.get(params[:id])
-    raise NotFound unless @comment
-    if @comment.update_attributes(params[:comment]) || !@comment.dirty?
-      redirect url(:comment, @comment)
-    else
-      raise BadRequest
-    end
-  end
-
-  def destroy
-    @comment = Comment.get(params[:id])
-    raise NotFound unless @comment
-    if @comment.destroy
-      redirect url(:comment)
-    else
-      raise BadRequest
-    end
+  
+  protected
+  
+  def assign_article_and_parent
+    @article = Article.get(params[:article_id])
+    raise NotFound unless @article
+    @parent = Comment.get(params[:parent_id]) unless params[:parent_id].blank?
   end
 
 end
