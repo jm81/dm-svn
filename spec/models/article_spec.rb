@@ -108,4 +108,20 @@ describe Article do
     end
   end
 
+  describe 'class' do
+    it "should find published articles" do
+      Article.all.each { |a| a.destroy }
+      7.times do |i|
+        a = Article.create(:title => "Test article")
+        if (i % 2 == 0)
+          a.published = true
+          a.save
+        end
+      end
+      
+      Article.all.length.should == 7
+      Article.published.length.should == 4
+    end
+  end
+  
 end

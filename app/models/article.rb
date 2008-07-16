@@ -37,5 +37,12 @@ class Article
   def comments_count
     Comment.count(:article_id => @article.id)
   end
-
+  
+  class << self
+    def published(options = {})
+      Article.all(options.merge(
+          :conditions => ["published_at >= time('now')"],
+          :order => [:published_at.desc]))
+    end
+  end
 end
