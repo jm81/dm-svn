@@ -1,0 +1,16 @@
+---
+
+:development: &defaults
+  :adapter: sqlite3
+  :database: dev.db
+
+:test:
+  <<: *defaults
+  :database: test.db
+  :svn_username: login
+  :svn_password: pw1234
+  svn_extension: doc
+
+:production:
+  <<: *defaults
+  :database: pro.db
