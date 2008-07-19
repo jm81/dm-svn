@@ -78,6 +78,7 @@ end
 
 # Uncomment for DataMapper ORM
 use_orm :datamapper
+dependency 'lib/wistle.rb'
 
 # Uncomment for ActiveRecord ORM
 # use_orm :activerecord
