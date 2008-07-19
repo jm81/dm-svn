@@ -382,10 +382,277 @@ for articles; they will after all disappear shortly).
 
 ##One Site Subversion
 
+So, we have a more or less working blog application using our friends Merb and
+DataMapper. That's great and if you were looking for a Merb/DataMapper tutorial,
+hopefully the above has helped. Still, the central goal is to store the articles
+in a source-control repository. So, let's get going on that.
+
+For now, I'm going to ignore the multi-site requirement, for two reasons: I want
+to first focus on just interacting with Subversion, without extra distractions;
+and I happen to know that I want to write the library that will be covered in
+this section for other uses.
+
+Before diving into the code, I want to examine three "big" design questions.
+
+1. How much abstraction? I could create a library that abstracts so that it
+   presents a unified API for multiple repositories. But I won't. Again, it
+   complicates things. Also, the "Subversion" stuff will not be accessed from
+   many points within the app, so I feel fairly safe with the possibility of
+   future "API changes" if I decide to abstract it later.
+
+2. What SCM? This is an easy call for me. I'm accustomed to Subversion,
+   including having some experience using its SWIG bindings. I've played a
+   little with git, but at some point I have to cut off the "learning new things
+   on this one app".
+   
+3. How to interact with Subversion. Here's some possibilities:
+
+   a. Command line/backticks: I'm not entirely opposed to this, but since there
+      are better options, no reason to look here. I may use it for a migration
+      script (from Mephisto) just for simplicity.
+   b. (RSCM)[http://rscm.rubyforge.org/]: This may no longer be true, but from
+      my memory of RSCM, it more or less uses the command line functions. It
+      offers the benefit of being abstracted, but like the command line, it
+      means working with a working copy. Sure, I could have one checked out
+      in a tmp directory, but I don't care for that idea.
+   c. post-commit-hooks: This could be pretty useful, and I could see extending
+      Mephisto to accept, say, XML or YAML sent by such a hook (it probably
+      would be fairly simple). One downside is that it requires permissions to
+      modify the hook. I don't actually anticipate this would be a common 
+      problem. The second downside is then I don't get to play :-( Oh, and the
+      third is getting pre-existing data.
+   d. [CSCM](http://svn.collaboa.org/svn/collaboa/branches/resterboa/lib/cscm):
+      Theoretically, along the lines of RSCM; so far, it's only for Subversion,
+      but it uses the SWIG bindings. Downsides are that it's not under active
+      development (with occassional exceptions on my personal copy, I suppose),
+      and that it's geared towards a different purpose.
+   e. Using Subversion SWIG bindings directly: Yay! This allows a bit more
+      control and focus than using one of the libraries, and since we don't
+      need a lot, I don't think this is reinventing the wheel. Or, maybe, I'm
+      just using an earlier wheel, down one level of abstraction. The big
+      downside to this is that [installing](http://www.swig.org/svn.html)
+      the SWIG binding can be a massive pain unless you have a distro that has a
+      nice package; it may well be impossible on Windows...
+   f. I'll throw in one more, which is using the svn or Subversion DeltaV--or
+      whatever the correct name is--protocols directly. Neither is all that 
+      difficult, but that path would still be a lot of extra work for probably 
+      minimal gain. It also has the downside that you have be running either
+      svnserve or an http server.
+
+Questions answered, I'll add a few more design thoughts before diving into the
+code.
+
+One approach, one which I've already tried, is to skip the relational database
+altogether. This is certainly possible, and with caching of the generated pages
+would be fast enough for my purposes. However, custom text searches are a
+problem, requiring loading all the current data, then performing the search in
+Ruby.
+
+Since this is not scalable, my solution is for the application to actually
+retrieve data from a relational database which mirrors the current state of
+repository. Therefore, the main functionality I need to add is to update the
+database after any commit to the repository. I'll actually have the update
+procedure run at every request but for most requests, it will only check the
+current revision number. Other options would be a cron job, an "update" button
+on the site, etc.
+
+To derive this updating functionality, I want to include a Module in the
+appropriate models. I'll call it Wistle::Svn because I can't think of a more
+useful name. I'll save the file as "lib/wistle/svn.rb".
+
+The first thing (yes, finally) I want this module to is add some properties to
+any model which includes it. So, let's start with:
+
+<code>
+module Wistle
+  module Svn
+    class << self
+      def included(klass) # Set a few 'magic' properties
+        klass.property :svn_created_at, DateTime
+        klass.property :svn_updated_at, DateTime
+        klass.property :svn_created_rev, String
+        klass.property :svn_updated_rev, String
+      end
+    end
+  end
+end
+</code>
+
+These are your basic created/updated timestamps except they will be kept in sync
+with the Subversion repo. This allows for having an #updated_at kept by the
+database without interfering with the auto timestamp functionality, etc. Also,
+we'll keep track of the revisions. #svn_created_rev is for information only;
+#svn_updated_rev will be important to the sync method. So, every model that
+includes Wistle::Svn gets these properties, stored in the relational database.
+Of course, I'm now assuming that this will only be included in a class that
+include *DataMapper::Resource*.
+
+Next up, I want to be able to specify, in the model, which is the "body"
+property; that is, what property in the relational db should store the contents
+of the file in Subversion. So, I need to accept an option to the property
+class method. But before I get there, this introduces a problem. How should I 
+store this *configuration* data?
+
+If you check out *ActiveRecord::Base*, for example, you'll see a lot of lines
+like this:
+
+<code>
+  cattr_accessor :table_name_prefix, :instance_writer => false
+  @@table_name_prefix = ""
+</code>
+
+I'm no expert on Rails internals, but I've spent a decent amount of time going
+through ActiveRecord in particular and this seems to be the preferred Rails'
+method for doing class-wide configuration. *cattr_accessor* is a Rails addition
+to Ruby (Merb has it as well). Having spent time in ActiveRecord, my first
+inclination was to use this. And as a methodology, it works pretty well when
+your inheriting your functionality. Class variables in an included module
+doesn't work (at least not in any way I understand).
+
+Instead, I decided to just use a configuration class. It's simpler and cleaner,
+in my opinion, and doesn't have the inclusion problem mentioned above (I'll get
+to how that works in a bit). So, let's start defining that class:
+
+<code>
+module Wistle
+  class Config
+    attr_accessor :body_property
+    
+    def initialize
+      # Set defaults
+      @body_property = 'body'
+    end
+  end
+end
+</code>
+
+All it does, for now, is define an instance variable, @body_property (the
+name of the property in the database that stores the contents of the file) and
+use :attr_accessor to create the getter and setter methods.
+
+But, now, our model needs access to the Config data. Again, I could try to make
+it a class variable, but there's still the problem with class variables in
+modules. Fortunately, in Ruby, everything is an Object. So, a class can have
+instance variables.
+
+<code>
+  module Wistle::Svn
+    module ClassMethods
+      def config
+        @config ||= Config.new
+    end
+  end
+end
+</code>
+
+Easy enough? I also need to extend the model class with the methods in
+ClassMethods when the module is included. This is a popular Rails trick. To the
+Wistle::Svn.included method, add the line
+<code>klass.extend(ClassMethods)</code>. Now, if Article include Wistle::Svn,
+we can access the config via #config (in the class), and self.class.config (from
+instances). And, I can always add custom methods for configuration options that
+are more likely to be accessed. Now, then, I can update DataMapper's *property*
+class method to accept an option saying that a particular property stores the
+file's contents.
+
+<code>
+  module Wistle::Svn
+    module ClassMethods
+      def property(name, type, options = {})
+        if options.delete(:body_property)
+          config.body_property = name.to_s
+        end
+        
+        super(name, type, options)
+      end
+    end
+  end
+</code>
+
+Using this would be something like:
+
+<code>
+  class Article
+    property :contents, :body_property => true
+  end
+</code>
+
+I'll look at what Wistle::Svn does with this information when I discuss syncing
+the databases. Hopefully, I will get to that point eventually.
+
+As an aside, since I don't anticipate any instance methods in the Wistle::Svn
+module, I could drop the ClassMethods module and use *extend* instead of
+*include* in my model. But I've chosen the *include* for consistency with
+DataMapper.
+
+================================================================================
+
+###The wistle_models table
+
+Before I can get to syncing, the database will need to know the version of its
+"working copy", as it were. Except, I suppose, for the first update. I reckon
+I need another table in the database that keeps track of the current revision
+for each Wistle::Svn model. So, 'lib/wistle/model.rb':
+
+<code>
+module Wistle
+  class Model # Table is named wistle_models.
+    include DataMapper::Resource
+  
+    property :id, Integer, :serial => true
+    property :name, String
+    property :revision, Integer
+  end
+end
+</code>
+
+And this file needs to be required in 'lib/wistle.rb'. Just for fun, let's run
+<code>rake dm:db:autoupgrade</code>. Alas, no luck, the new model doesn't
+migrate. There's a good reason why, none of the Wistle module is required when
+running Merb (As an aside, it just seems more reasonable to me to include
+WistleModel in the Wistle lib instead of directly in the models directory). Add
+another depencency in init.db, but there's a gotcha here. This dependency should
+not be declared until after <code>use_orm :datamapper</code>, because it depends
+on DataMapper being *loaded*.
+
+<code>
+use_orm :datamapper
+dependency 'lib/wistle.rb'
+</code>
+
+Awesome. I guess. You can run that migration now and it should work. And now
+let's get our Subversion-y models talking to this model. Then we can actually
+work on updates.
+
+<code>
+  module Wistle::Svn
+    module ClassMethods
+			def svn_repository
+        return @svn_repository if @svn_repository
+        
+        @svn_repository = Wistle::Model.first(:name => self.name)
+        @svn_repository ||= Wistle::Model.create(:name => self.name)
+        @svn_repository.config = config
+        @svn_repository
+      end
+    end
+  end
+</code>
+
+Again, I use the Class instance variable trick. I only want to set up
+@svn_repository when I have to, so if it's already available, I just return it.
+Next, I try to get a row in wistle_models that is set up for the current. If no
+luck there, I create such a row. Finally, I give this Model instance direct
+access to the Subversion-ized Models *@config*. Which means one more update to
+Wistle::Model: <code>attr_accessor :config</code>.
+
+
 ##Body Filters
 
   - Filter comments
 
 ##Multi Site models
+
+  - Categories based on folders.
 
 ##Multi Site views (and helpers)
