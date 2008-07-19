@@ -66,6 +66,7 @@ describe Comment do
     @comment.save
     u = @comment.updated_at
     u.should_not be_nil
+    sleep(0.1)
     @comment.body = "New Body"
     @comment.save
     @comment.updated_at.should > u
