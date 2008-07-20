@@ -9,6 +9,8 @@ module Wistle
         klass.property :svn_updated_at, DateTime
         klass.property :svn_created_rev, String
         klass.property :svn_updated_rev, String
+        klass.property :svn_created_by, String
+        klass.property :svn_updated_by, String
       end
     end
     

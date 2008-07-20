@@ -24,11 +24,15 @@ describe Wistle::Svn do
     MockArticleNoSvn.properties['svn_updated_at'].should be_nil
     MockArticleNoSvn.properties['svn_created_rev'].should be_nil
     MockArticleNoSvn.properties['svn_updated_rev'].should be_nil
+    MockArticleNoSvn.properties['svn_created_by'].should be_nil
+    MockArticleNoSvn.properties['svn_updated_by'].should be_nil
 
     MockArticle.properties['svn_created_at'].should be_kind_of(DataMapper::Property)
     MockArticle.properties['svn_updated_at'].should be_kind_of(DataMapper::Property)
     MockArticle.properties['svn_created_rev'].should be_kind_of(DataMapper::Property)
     MockArticle.properties['svn_updated_rev'].should be_kind_of(DataMapper::Property)
+    MockArticle.properties['svn_created_by'].should be_kind_of(DataMapper::Property)
+    MockArticle.properties['svn_updated_by'].should be_kind_of(DataMapper::Property)
     MockArticle.properties['path'].should be_kind_of(DataMapper::Property)
   end
   
