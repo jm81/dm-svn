@@ -4,6 +4,7 @@ module Wistle
       def included(klass) # Set a few 'magic' properties
         klass.extend(ClassMethods)
         
+        klass.property :path, String
         klass.property :svn_created_at, DateTime
         klass.property :svn_updated_at, DateTime
         klass.property :svn_created_rev, String

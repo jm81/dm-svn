@@ -29,6 +29,7 @@ describe Wistle::Svn do
     MockArticle.properties['svn_updated_at'].should be_kind_of(DataMapper::Property)
     MockArticle.properties['svn_created_rev'].should be_kind_of(DataMapper::Property)
     MockArticle.properties['svn_updated_rev'].should be_kind_of(DataMapper::Property)
+    MockArticle.properties['path'].should be_kind_of(DataMapper::Property)
   end
   
   it "should assign @config to an instance of Wistle::Config" do
