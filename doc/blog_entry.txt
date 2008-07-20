@@ -373,7 +373,7 @@ for articles; they will after all disappear shortly).
        class << self
          def published(options = {})
            Article.all(options.merge(
-               :conditions => ["published_at >= time('now')"],
+               :conditions => ["datetime(published_at) <= datetime('now')"],
                :order => [:published_at.desc]))
          end
        end
@@ -468,18 +468,25 @@ module Wistle
   module Svn
     class << self
       def included(klass) # Set a few 'magic' properties
+        klass.property :path, String
         klass.property :svn_created_at, DateTime
         klass.property :svn_updated_at, DateTime
         klass.property :svn_created_rev, String
         klass.property :svn_updated_rev, String
+        klass.property :svn_created_by, String
+        klass.property :svn_updated_by, String
       end
     end
   end
 end
 </code>
 
-These are your basic created/updated timestamps except they will be kept in sync
-with the Subversion repo. This allows for having an #updated_at kept by the
+Path will store the relative path in the repository. It will also serve as a
+permalink later on (Note, *path*, and the *_by's were added in later commits
+than the others. I just went and missed them).
+
+The others are your basic created/updated timestamps except they will be kept in
+sync with the Subversion repo. This allows for having an #updated_at kept by the
 database without interfering with the auto timestamp functionality, etc. Also,
 we'll keep track of the revisions. #svn_created_rev is for information only;
 #svn_updated_rev will be important to the sync method. So, every model that
@@ -621,8 +628,7 @@ dependency 'lib/wistle.rb'
 </code>
 
 Awesome. I guess. You can run that migration now and it should work. And now
-let's get our Subversion-y models talking to this model. Then we can actually
-work on updates.
+let's get our Subversion-y models talking to this model.
 
 <code>
   module Wistle::Svn
@@ -631,7 +637,7 @@ work on updates.
         return @svn_repository if @svn_repository
         
         @svn_repository = Wistle::Model.first(:name => self.name)
-        @svn_repository ||= Wistle::Model.create(:name => self.name)
+        @svn_repository ||= Wistle::Model.create(:name => self.name, :revision => 0)
         @svn_repository.config = config
         @svn_repository
       end
@@ -646,6 +652,332 @@ luck there, I create such a row. Finally, I give this Model instance direct
 access to the Subversion-ized Models *@config*. Which means one more update to
 Wistle::Model: <code>attr_accessor :config</code>.
 
+Before hitting the update code, I want to flesh out the Wistle::Config class.
+The other three configuration elements I want are
+
+<dl>
+  <dt>uri</dt>
+  <dd>
+    The uri of the folder in the Subversion repository where the model's
+    contents are stored (file:///path/to/repo/path/to/folder,
+    svn://example.com/path/to/folder, etc.)
+  </dd>
+  <dt>username</dt>
+  <dd>
+    The Subversion username to use, if needed.
+  </dd>
+  <dt>password</dt>
+  <dd>
+    The Subversion password to use, if needed.
+  </dd>
+  <dt>property_prefix</dt>
+  <dd>
+    This addresses a question I didn't ask above. How to deal with properties
+    other than the contents. I could, for example, start each file with a bit
+    of yaml or xml or what have. I'm going to store the other properties using
+    Subversion's property mechanism. However, I want to minimize the chance of
+    name conflicts, so I provide a setting for a prefix. As a default, I'll use
+    "ws:" (for Wistle::Svn, I guess).
+  </dd>
+  <dt>extension</dt>  
+  <dd>
+    The extension of files that will be included in the update. This is
+    certainly not necessary, but it works for me.
+  </dd>
+</dl>
+
+<code>
+  class Wistle::Config
+    OPTS = [:uri, :username, :password,
+            :body_property, :property_prefix, :extension]
+    
+    attr_accessor *OPTS
+    
+    def initialize
+      # Set defaults
+      @body_property = 'body'
+      @property_prefix = 'ws:'
+      @extension = 'txt'
+    end
+  end
+</code>
+
+The OPTS constant is because I'll re-use this list momentarily.
+I also want to be able to set some of these settings in database.yml, if it's
+available. At the end of the initialize method, I add:
+
+<code>
+  if Object.const_defined?("Merb")
+    f = "#{Merb.root}/config/database.yml"
+    env = Merb.env.to_sym || :development
+  end
+  
+  if f
+    config = YAML.load(IO.read(f))[env]
+    OPTS.each do |field|
+      config_field = config["svn_#{field}"] || config["svn_#{field}".to_sym]
+      if config_field
+        instance_variable_set("@#{field}", config_field)
+      end
+    end
+  end
+</code>
+
+Now, in database.yml, I can add <code>:svn_username: my_login</code>. That is,
+I can prefix any of the fields defined above with 'svn_'. I'm not sure that
+sentence made sense.
+
+================================================================================
+
+###Updating
+
+Hey, it's time for the central code, sync the database from the repository. If
+you're particularly interesting in using Subversion's SWIG bindings, one of the
+more interesting parts of this project might be the Wistle::Fixture library,
+which I use to generate Subversion repository "test fixtures", but which I won't
+cover here. Incidentally, if you are so inclined, the
+[test cases](http://svn.collab.net/repos/svn/trunk/subversion/bindings/swig/ruby/test/)
+ included in Subversion's repository. The
+[actual code](http://svn.collab.net/repos/svn/trunk/subversion/bindings/swig/ruby/svn/)
+isn't commented, but it's "fairly" readable.
+
+I'm putting the syncing code in its own class, because, well, that's what my
+brain says I should do. The only initialization argument it requires is a
+the appropriate row in Wistle::Model. It only provides one other public method,
+#run, which runs the updating, going through the following steps
+
+1. Connect to the repository. See #connect, #context, and #callbacks private
+   methods. Most of what's going on here is dealing with different
+   authentication options. Honestly, I don't have a solid understanding of this
+   bit.
+2. Check if we have updated to the last revision already. If so, quit.
+3. Run the repository's #log method. This gets information about each commit,
+   starting with the most recent; I've specified to get revisions only through
+   the last update (stored in Wistle::Model#revision). Store this information
+   in the variable *changesets*.
+4. Reverse *changesets* and run #do_changeset on each element.
+
+#do_changeset actually updates the database. For each change in the changeset:
+
+1. It determines whether the change was one I'm interested in, and if so, what
+   kind of change. There are three types of interest: moves, modifications/adds,
+   and deletes.
+2. Moves are the most problematic, mostly because Subversion doesn't really have
+   a "move" concept. Instead were looking for a node that was copied for another
+   node in the same changeset that the latter node was deleted. In this case,
+   as opposed to "just a copy", I don't want to create a new entry in the
+   database, but rather modify the path of the existing entry. Why? To not
+   invalidate foreign keys, i.e. to keep comments listed with the article after
+   it's renamed.
+3. Next, do any deletes. It's possible we won't find the node to delete, either
+   because it was actually a move, or because it refers to a file we don't keep
+   track of. In that case, just continue on with the next delete.
+4. Modify/Add/Replace: In all these cases, what I want is to update the content
+   of the appropriate row, creating a new row if needed. The private method
+   #get is responsible for finding the appropriate row, based on the path. This
+   updates contents and other properties, both those specified by the revision
+   and the actual node properties.
+5. When all changes have been processed, update the Wistle::Model row with the
+   new current revision.
+
+If you aren't familiar with the SWIG bindings, the code will probably be a bit
+confusing, but hopefully the outline above will help clarify what's going on.
+More to the point, I hope it illustrates that ORM's are not the only available
+storage mechanisms for web apps.
+
+So, the code (yikes):
+
+<code>
+module Wistle
+  class SvnSync
+    def initialize(model_row)
+      @model_row = model_row
+      @model = Object.const_get(@model_row.name)
+      @config = @model_row.config
+    end
+    
+    # There is the possibility for uneccessary updates, as a database row may be
+    # modified several times (if modified in multiple revisions) in a single
+    # call. This is inefficient, but--for now--not enough to justify more
+    # complex code.
+    def run
+      connect unless @repos
+      return false if @repos.latest_revnum <= @model_row.revision
+      
+      changesets = [] # TODO Maybe revision + 1
+      @repos.log(@path_from_root, @repos.latest_revnum, @model_row.revision, 0, true, false
+          ) do |changes, rev, author, date, msg|
+        changesets << [changes, rev, author, date]
+      end
+      
+      changesets.sort{ |a, b| a[1] <=> b[1] }.each do |c| # Sort by revision
+        do_changset(*c)
+      end
+      return true
+    end
+    
+    private
+    
+    # Get the relative path from config.uri
+    def short_path(path)
+      path = path[@path_from_root.length..-1]
+      path = path[1..-1] if path[0] == ?/
+      path.sub!(/\.#{@config.extension}\Z/, '') if @config.extension
+      path
+    end
+    
+    # Get an object of the @model, by path.
+    def get(path)
+      @model.first(:path => short_path(path))
+    end
+    
+    # Process a single changset.
+    # This doesn't account for possible move/replace conflicts (A node is moved,
+    # then the old node is replaced by a new one). I assume those are rare
+    # enough that I won't code around them, for now.
+    def do_changset(changes, rev, author, date)
+      modified, deleted, copied = [], [], []
+      
+      changes.each_pair do |path, change|
+        next if short_path(path).blank?
+        
+        case change.action
+        when "M", "A", "R" # Modified, Added or Replaced
+          modified << path if @repos.stat(path, rev).file?
+        when "D"
+          deleted << path
+        end
+        copied << [path, change.copyfrom_path] if change.copyfrom_path        
+      end
+            
+      # Perform moves
+      copied.each do |copy|
+        del = deleted.find { |d| d == copy[1] }
+        if del
+          # Change the path. No need to perform other updates, as this is an
+          # "A" or "R" and thus is in the +modified+ Array.
+          record = get(del)
+          record.update_attributes(:path => short_path(copy[0])) if record
+        end
+      end
+      
+      # Perform deletes
+      deleted.each do |path|
+        record = get(path)
+        record.destroy if record # May have been moved or refer to a directory
+      end
+      
+      # Perform modifies and adds
+      modified.each do |path|
+        next if @config.extension && path !~ /\.#{@config.extension}\Z/
+        
+        record = get(path) || @model.new
+        svn_file = @repos.file(path, rev)
+        
+        # update body
+        record.__send__("#{@config.body_property}=", svn_file[0])
+
+        # update node props -- just find any props with property_prefix
+        svn_file[1].each do |name, val|
+          if name =~ /\A#{@config.property_prefix}(.*)/
+            record.__send__("#{$1}=", val)
+          end
+        end
+
+        # update revision props
+        record.path = short_path(path)
+        record.svn_updated_at = date
+        record.svn_updated_rev = rev
+        record.svn_updated_by = author
+        if record.new_record?
+          record.svn_created_at = date
+          record.svn_created_rev = rev
+          record.svn_created_by = author
+        end
+        record.save
+      end
+      
+      # Update model_row.revision
+      @model_row.update_attributes(:revision => rev)
+    end
+    
+    def connect
+      @ctx = context
+     
+      # This will raise some error if connection fails for whatever reason.
+      # I don't currently see a reason to handle connection errors here, as I
+      # assume the best handling would be to raise another error.
+      @repos = ::Svn::Ra::Session.open(@config.uri, {}, callbacks)
+      @path_from_root = @config.uri[(@repos.repos_root.length)..-1]
+      return true
+    end
+
+    def context
+      # Client::Context, which paticularly holds an auth_baton.
+      ctx = ::Svn::Client::Context.new
+      if @config.username && @config.password
+        # TODO: What if another provider type is needed? Is this plausible?
+        ctx.add_simple_prompt_provider(0) do |cred, realm, username, may_save|
+          cred.username = @config.username
+          cred.password = @config.password
+        end
+      elsif URI.parse(@config.uri).scheme == "file" 
+        ctx.add_username_prompt_provider(0) do |cred, realm, username, may_save|
+          cred.username = @config.username || "ANON"
+        end
+      else
+        ctx.auth_baton = ::Svn::Core::AuthBaton.new()
+      end
+      ctx
+    end
+  
+    # callbacks for Svn::Ra::Session.open. This includes the client +context+.
+    def callbacks
+      ::Svn::Ra::Callbacks.new(@ctx.auth_baton)
+    end
+  end
+end
+</code>
+
+Time to hook the pieces together.
+
+An update to Wistle::Svn, to add the .sync class method to including models:
+
+<code>
+  module Wistle::Svn
+    module ClassMethods
+      def sync
+        Wistle::SvnSync.new(svn_repository).run
+      end
+    end
+  end
+</code>
+
+in Article, after including DataMapper::Resource, 
+<code>include Wistle::Svn</code>.
+
+Run <code>rake db:migrate</code> to add in Wistle::Svn's properties to Article.
+
+And, now, to make the sync's happen. I'm going to go with one sync for every
+Request, for now. This may prove to be terribly inefficient (the connect code
+to the Subversion repository is not cheap), but if so, I'll change it later.
+
+So, a nice before filter in Application should do the trick.
+
+<code>
+class Application < Merb::Controller
+  before :sync_articles
+  
+  protected
+
+  def sync_articles
+    Article.sync
+  end
+end
+</code>
+
+And, well...that's it. Well, you do need to set up in appropriate Wistle::Config
+in Article (or in database.yml).
 
 ##Body Filters
 
@@ -654,5 +986,6 @@ Wistle::Model: <code>attr_accessor :config</code>.
 ##Multi Site models
 
   - Categories based on folders.
+  - STI?
 
 ##Multi Site views (and helpers)
