@@ -114,12 +114,14 @@ describe Article do
       7.times do |i|
         a = Article.create(:title => "Test article")
         if (i % 2 == 0)
-          a.published = true
+          a.published_at = Time.now - 3600
           a.save
         end
       end
       
-      Article.all.length.should == 7
+      a = Article.create(:title => "Test article", :published_at => (Time.now + 3600) )
+      
+      Article.all.length.should == 8
       Article.published.length.should == 4
     end
   end

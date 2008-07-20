@@ -41,7 +41,7 @@ class Article
   class << self
     def published(options = {})
       Article.all(options.merge(
-          :conditions => ["published_at >= time('now')"],
+          :conditions => ["datetime(published_at) <= datetime('now')"],
           :order => [:published_at.desc]))
     end
   end
