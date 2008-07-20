@@ -18,6 +18,10 @@ describe Article do
     c.save
     return c
   end
+  
+  it "should include Wistle::Svn" do
+    Article.should respond_to(:sync)
+  end
 
   it "should have many comments" do
     5.times do |i|

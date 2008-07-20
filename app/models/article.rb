@@ -1,5 +1,8 @@
 class Article
   include DataMapper::Resource
+  include Wistle::Svn
+  
+  # Setup Wistle::Config info here or in database.yml
   
   has n, :comments
  
