@@ -70,7 +70,7 @@ describe Wistle::Svn do
     it "should create an new Wistle::Model if needed" do
       Wistle::Model.should_receive(:first).with(:name => 'MockArticle').
           and_return(nil)
-      Wistle::Model.should_receive(:create).with(:name => 'MockArticle').
+      Wistle::Model.should_receive(:create).with(:name => 'MockArticle', :revision => 0).
           and_return(@wistle_model)
       MockArticle.svn_repository.should be(@wistle_model)
     end
@@ -91,5 +91,15 @@ describe Wistle::Svn do
       @wistle_model.should_receive(:config=).with(MockArticle.config)
       MockArticle.svn_repository
     end
+    
+    it "should run sync" do
+      Wistle::Model.should_receive(:first).with(:name => 'MockArticle').
+          and_return(@wistle_model)
+      sync = mock(Wistle::SvnSync)
+      Wistle::SvnSync.should_receive(:new).with(@wistle_model).and_return(sync)
+      sync.should_receive(:run)
+      MockArticle.sync
+    end
+    
   end
 end

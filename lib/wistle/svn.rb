@@ -35,9 +35,13 @@ module Wistle
         return @svn_repository if @svn_repository
         
         @svn_repository = Wistle::Model.first(:name => self.name)
-        @svn_repository ||= Wistle::Model.create(:name => self.name)
+        @svn_repository ||= Wistle::Model.create(:name => self.name, :revision => 0)
         @svn_repository.config = config
         @svn_repository
+      end
+      
+      def sync
+        Wistle::SvnSync.new(svn_repository).run
       end
     end
     
