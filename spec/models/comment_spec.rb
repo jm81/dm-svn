@@ -80,5 +80,12 @@ describe Comment do
     @comment.save
     @comment.created_at.should == c
   end
+  
+  it "should filter body to html" do
+    @comment.body = "Howdy *folks*"
+    @comment.filters = "Markdown"
+    @comment.save
+    @comment.html.should == "<p>Howdy <em>folks</em></p>\n"
+  end
 
 end

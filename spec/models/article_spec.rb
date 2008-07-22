@@ -46,6 +46,20 @@ describe Article do
     Article[@article.id].should have(3).direct_comments
   end
   
+  it "should filter body to html" do
+    @article.body = "Howdy *folks*"
+    @article.filters = "Markdown"
+    @article.save
+    @article.html.should == "<p>Howdy <em>folks</em></p>\n"
+  end
+
+  it "should filter body to html (with Textile)" do
+    @article.body = "Howdy *folks* ^2^"
+    @article.filters = "Textile"
+    @article.save
+    @article.html.should == "<p>Howdy <strong>folks</strong> <sup>2</sup></p>"
+  end
+  
   describe "#published_at" do
     it "should respond to #published?" do
       @article.published_at = nil
