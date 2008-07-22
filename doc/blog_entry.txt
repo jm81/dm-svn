@@ -981,7 +981,63 @@ in Article (or in database.yml).
 
 ##Body Filters
 
-  - Filter comments
+My next big step is to filter the content, so that Article.html, for example,
+is the body property filtered through Markdown. So, I created a Filters module,
+in lib/filters.rb . I want show the code here, but I am going to discuss my
+approach about. Of course, plenty of other packages, such as Mephisto, have
+already addressed this issue and done so well. But, a big part of this project
+is for my own personal enjoyment. And I want to write random code, eh?
+
+The crux of my approach is that all the filtering libraries I'm accustomed can
+be used as such: <code>FilterClass.new(content).to_html</code>. So, the Filters
+module attempts to initialize an object of the specified class and call
+#to_html. If needed, the module tries to require the appropriate file or gem.
+
+A constant Hash is defined, with each pair in the format:
+NameSpecifiedInModel => [[require_name, ClassName], [backup_require_name, BackupClassName]]
+
+For example:
+
+<code>
+  {
+    'Smartypants' => [['rubypants', 'RubyPants']],
+    'Markdown' => [['rdiscount', 'RDiscount'], ['bluecloth', 'BlueCloth']]
+  }
+</code>
+
+In the model, this is set up by <code>include Filter::Resource</code> (probably,
+not the most useful name). Then, properties can be set to format with an option
+:format. The syntax when defining a property is:
+
+<code>
+  property :prop_name, :filter => {:to => :filtered_prop, :with => :filter_column, :default => "DefaultFilter"}
+</code>
+
+(:with and :default are optional, though at least one should be specified.)
+
+If the properties in :to and :with have not yet been defined, they will be
+defined automatically. Hence, if want to specify any options with this, they
+should be defined before to filtered property.
+
+This is similar to Wistle::Svn in that it extends the *property* methods and
+stores information in a class instance variable. It also adds a method
+*process_filters*, called by a before :save hook, that updates the *to*
+property.
+
+So, in Article and Comment, we will now have:
+
+<code>
+  property :html, Text, :lazy => false
+  property :body, Text,
+           :filter => {:to => :html, :with => :filters, :default => %w{Markdown Smartypants}}
+</code>
+
+I also update views to use #html instead of #body.
+
+There's room for design debate here. One of the things I like about DataMapper
+is that the programmer explicitly declares properties. But, here, Filters is
+doing a lot behind the scenes, including possibly declaring some properties.
+Still, the design "feels right" to me.
 
 ##Multi Site models
 
@@ -989,3 +1045,10 @@ in Article (or in database.yml).
   - STI?
 
 ##Multi Site views (and helpers)
+
+##Future
+
+  - Tags
+  - Search
+  - Date links
+  - RSS/Atom
