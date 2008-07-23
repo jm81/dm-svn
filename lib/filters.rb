@@ -114,7 +114,12 @@ module Filters
       end
       
       def filtered_properties
-        @filtered_properties
+        begin
+          # This is to work with STI models. It's not a very good solution.
+          @filtered_properties || self.superclass.filtered_properties
+        rescue
+          nil
+        end
       end
     end
   end
