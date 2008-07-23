@@ -23,6 +23,10 @@ module Wistle
       changesets.sort{ |a, b| a[1] <=> b[1] }.each do |c| # Sort by revision
         do_changset(*c)
       end
+      
+      # Ensure that @model_row.revision is now set to the latest (even if there
+      # weren't applicable changes in the latest revision).
+      @model_row.update_attributes(:revision => @repos.latest_revnum)
       return true
     end
     
