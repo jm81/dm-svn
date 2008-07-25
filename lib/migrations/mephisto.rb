@@ -42,6 +42,26 @@ class ContentVersion
   
 end
 
+class AssignedSection
+  include DataMapper::Resource
+  
+  repository(:mephisto) do
+    property :id, Integer, :serial => true
+    property :article_id, Integer
+    property :section_id, Integer
+  end
+end
+
+class Section
+  include DataMapper::Resource
+  
+  repository(:mephisto) do
+    property :id, Integer, :serial => true
+    property :site_id, Integer
+    property :path, String
+  end
+end
+
 # Check to run for multiple permalinks:
 # select permalink, count(id) as c from contents where type='Article' group by permalink having c > 1;
 
@@ -50,21 +70,17 @@ module Migrations
     def initialize(name, site_id)
       @site_id = site_id
       @name = name
-      
-      #File.open("#{@repo_path}/hooks/pre-revprop-change", 'w') do |f|
-      #  f.write "#!/bin/sh\n\nexit 0\n"
-      #end
-      #`chmod u+x #{@repo_path}/hooks/pre-revprop-change`
     end
-  
+
     def run
       site_id = @site_id
 
       svn_repo(@name) do
         rev = 1
-        revision(rev, 'Generate articles directory (Wistle Migration)',
+        revision(rev, 'Generate content directory (Wistle Migration)',
+            :author => 'jmorgan',
             :date => Time.parse("2007-01-01")) do
-          dir 'articles'
+          dir 'content'
         end
 
         repository(:mephisto) do
@@ -72,19 +88,25 @@ module Migrations
 
           versions.each do |v|
             article = Content.get(v.article_id)
+            section_id = AssignedSection.first(:article_id => v.article_id).section_id
+            section = Section.get(section_id).path
             commit_type = v.version == 1 ? "Create" : "Update"
             
             revision(rev += 1,
-                "#{commit_type} article #{article.permalink} (Wistle Migration)",
+                "#{commit_type} content: #{section}/#{article.permalink} (Wistle Migration)",
                 :author => 'jmorgan', #TODO: real name
                 :date => v.updated_at
               ) do
   
-              dir 'articles' do
-                file "#{article.permalink}.txt" do
-                  prop 'dm:title', v.title
-                  prop 'dm:filter', v.filter.gsub('_filter', '')
-                  body v.body
+              dir 'content' do
+                dir section do
+                  file "#{article.permalink}.txt" do
+                    prop 'ws:title', v.title
+                    filter = v.filter.gsub('_filter', '').camel_case
+                    filter = "Smartypants; Markdown" if filter == "Smartypants"
+                    prop 'ws:filter', filter
+                    body v.body
+                  end
                 end
               end # dir
             end # revision
@@ -93,8 +115,10 @@ module Migrations
         end
       end
       
-      svn_repo(@name).create.commit
+      svn_repo(@name).checkout.commit
       return true
     end
   end
 end
+
+# m = Migrations::Mephisto.new("repo_name", 1)
