@@ -84,6 +84,9 @@ module Filters
           if filters.blank?
             filters = f[:default]
           end
+          if filters == :site
+            filters = self.site.__send__("#{self.class.name.snake_case}_filter")
+          end
           attribute_set(f[:to], Filters.process(filters, self.__send__(f[:name])))
         end
       end
