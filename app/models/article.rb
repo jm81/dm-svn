@@ -1,10 +1,10 @@
 class Article
   include DataMapper::Resource
-  include Wistle::Svn
   include Filters::Resource
   
   # Setup Wistle::Config info here or in database.yml
   
+  belongs_to :site
   has n, :comments
  
   has n, :direct_comments,
@@ -13,6 +13,7 @@ class Article
       :parent_id => nil
 
     property :id, Integer, :serial => true
+    property :site_id, Integer
     property :title, String
     property :html, Text, :lazy => false
     property :body, Text,
@@ -21,6 +22,15 @@ class Article
     property :comments_allowed_at, DateTime
     property :created_at, DateTime
     property :updated_at, DateTime
+    
+    # Subversion-specific properties
+    property :path, String
+    property :svn_created_at, DateTime
+    property :svn_updated_at, DateTime
+    property :svn_created_rev, String
+    property :svn_updated_rev, String
+    property :svn_created_by, String
+    property :svn_updated_by, String
   
   # Set boolean from timestamp methods:
   # - {name}?

@@ -4,6 +4,7 @@ describe Article do
   
   before(:each) do
     Comment.all.each { |c| c.destroy }
+    Site.all.each { |s| s.destroy }
     @article = Article.new
     @article.title = "First Post"
     @article.body = "Howdy folks"
@@ -19,10 +20,6 @@ describe Article do
     return c
   end
   
-  it "should include Wistle::Svn" do
-    Article.should respond_to(:sync)
-  end
-
   it "should have many comments" do
     5.times do |i|
       comment(@article.id)
@@ -142,6 +139,12 @@ describe Article do
       Article.all.length.should == 8
       Article.published.length.should == 4
     end
+  end
+  
+  it "should belong to a Site" do
+    site = Site.create(:name => "newsite")
+    @article.site_id = site.id
+    @article.site.name.should == site.name
   end
   
 end
