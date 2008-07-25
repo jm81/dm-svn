@@ -17,7 +17,7 @@ class Article
     property :title, String
     property :html, Text, :lazy => false
     property :body, Text,
-             :filter => {:to => :html, :with => :filters, :default => %w{Markdown Smartypants}}
+             :filter => {:to => :html, :with => :filters, :default => :site}
     property :published_at, DateTime
     property :comments_allowed_at, DateTime
     property :created_at, DateTime
