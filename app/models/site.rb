@@ -17,7 +17,7 @@ class Site
   
   # Content Filters
   property :article_filter, String
-  property :comments_filter, String
+  property :comment_filter, String
   
   # Timestamps
   property :created_at, DateTime
