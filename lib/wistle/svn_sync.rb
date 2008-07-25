@@ -45,6 +45,11 @@ module Wistle
       @model.first(:path => short_path(path))
     end
     
+    # Create a new object of the @model
+    def new_record
+      @model.new
+    end
+    
     # Process a single changset.
     # This doesn't account for possible move/replace conflicts (A node is moved,
     # then the old node is replaced by a new one). I assume those are rare
@@ -85,7 +90,7 @@ module Wistle
       modified.each do |path|
         next if @config.extension && path !~ /\.#{@config.extension}\Z/
         
-        record = get(path) || @model.new
+        record = get(path) || new_record
         svn_file = @repos.file(path, rev)
         
         # update body
