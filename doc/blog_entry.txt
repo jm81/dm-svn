@@ -831,6 +831,11 @@ module Wistle
       @model.first(:path => short_path(path))
     end
     
+    # Create a new object of the @model
+    def new_record
+      @model.new
+    end
+    
     # Process a single changset.
     # This doesn't account for possible move/replace conflicts (A node is moved,
     # then the old node is replaced by a new one). I assume those are rare
@@ -871,7 +876,7 @@ module Wistle
       modified.each do |path|
         next if @config.extension && path !~ /\.#{@config.extension}\Z/
         
-        record = get(path) || @model.new
+        record = get(path) || new_record
         svn_file = @repos.file(path, rev)
         
         # update body
@@ -976,6 +981,9 @@ class Application < Merb::Controller
 end
 </code>
 
+Finally, I'm going to remove all methods and associated views from Articles that
+can update an Article, i.e. new, create, edit, update and destroy.
+
 And, well...that's it. Well, you do need to set up in appropriate Wistle::Config
 in Article (or in database.yml).
 
@@ -1041,10 +1049,192 @@ Still, the design "feels right" to me.
 
 ##Multi Site models
 
-  - Categories based on folders.
-  - STI?
+Ah, point #4, multiple sites hosted on one Wistle instance. I'm not going to
+create additional "library" functionality to support this. After all, this is
+getting pretty application-specific. But, I am going to take advantage of the
+existing Wistle library.
 
-##Multi Site views (and helpers)
+The key point here is going to be a Site model, that: a) Articles belong to; and
+b) takes over storing per-site configuration. In essence, it will replace
+Wistle::Config. The key is that "site-wide" configuration will subsitute for
+model-wide configuration. So, let's start with the Site model.
+
+<code>
+class Site
+  include DataMapper::Resource
+  
+  has n, :articles
+  
+  property :id, Integer, :serial => true
+  property :name, String, :unique => true, :nullable => false
+  property :domain_regex, String
+  
+  # Subversion
+  property :contents_uri, Text
+  property :contents_revision, Integer, :default => 0
+  property :username, String
+  property :password, String
+  property :property_prefix, String, :default => "ws:"
+  property :extension, String, :default => "txt"
+  
+  # Content Filters
+  property :article_filter, String
+  property :comments_filter, String
+  
+  # Timestamps
+  property :created_at, DateTime
+  property :updated_at, DateTime
+end
+</code>
+
+Here's the properties (and has n, :articles).
+Note that the properties under the "Subversion" heading
+are pretty close to the instance variables of Svn::Config. Also, notice 
+contents_uri and contents_revision. These match with Config's uri and revision.
+Why the prefix? Because I want to able to use a different uri (possibly in
+another repo) for views and public files. But that is for the next section. I
+could set up username, etc this same way; I won't for now, because I have no
+use for doing so. If I were, however, I would probably create another model,
+called "Config" or something that belongs to a Site, with a *role* property.
+Like I said, it's not needed for now, so I won't bother.
+
+The contents_* fields could create a problem though, because Wistle::SvnSync
+expects different names. A simple solution is some (not-quite) aliasing:
+
+<code>
+class Site
+  def uri
+    @contents_uri
+  end
+
+  def revision
+    @contents_revision
+  end
+
+  def revision=(rev)
+    attribute_set(:contents_revision, rev)
+  end
+  
+  def body_property
+    :body
+  end
+end
+</code>
+
+The revision= is also used by Wistle::SvnSync, and body_property is another
+configuration option that SvnSync expects. With body_property, there's only one
+option, at least so long as I only use the one model (Article). So,
+body_property always returns :body. I'll show how all this hooks into SvnSync in
+a moment. Before that, though, a bit about the :domain_regex property.
+
+Wistle, is not designed to be user-friendly in the traditional sense, except
+when the user is defined as me. For example, adding Sites, deleting Comments,
+etc. must, at this point, be done through a console. That's great by me, but for
+someone without programming experience, Wistle would probably not be a good
+choice. Another example is the domain regex property. It's used by
+*Site.by_domain* (below) to find a site based on a domain. Except, as it's name
+implies, domain_regex is a regular expression. Great for me, might be less
+attractive to others.
+
+<code>
+class Site
+  class << self
+    # Find a Site by domain regex, prefer longest match.
+    def by_domain(val)
+      possible = []
+      
+      # Find matching Sites
+      Site.all.each do |s|
+        r = Regexp.new(s.domain_regex.to_s, true)
+        m = r.match(val)
+        if m
+          possible << [s, m[0].length] 
+        end
+      end
+
+			# Sort for longest match.
+      possible.sort!{ |a, b| b[1] <=> a[1] }
+      possible[0] ? possible[0][0] : nil
+    end
+  end
+end
+</code>
+
+Now, you may have noticed a few weird methods that didn't do much in SvnSync,
+partically *get* and *new_record*. Here's where they come in. To use SvnSync
+with the new Site model (instead of the Wistle::Model Model), a few things have
+to change. First, Site doesn't have a *config* method, pointing to a
+Wistle::Config object. It does, however, respond to the the same methods as a
+Config object. Second, when creating or getting the content, we need to scope by
+Site. What to do? Inherit Wistle::SvnSync and override a few key methods.
+
+<code>
+class SiteSync < Wistle::SvnSync
+  def initialize(model_row)
+    @model_row = model_row
+    @model = Article
+    @config = model_row
+  end
+  
+  # Get an Article by site and path.
+  def get(path)
+    Article.first(:site_id => @model_row.id, :path => short_path(path))
+  end
+  
+  def new_record
+    @model.new(:site_id => @model_row.id)
+  end
+end
+</code>
+
+Awesome-sauce.
+
+Now, just hook in Site to SiteSync and all the ugly work is done!
+
+<code>
+class Site
+ def sync
+    SiteSync.new(self).run
+  end
+
+  class << self
+    def sync_all
+      Site.all.each do |site|
+        site.sync if site.contents_uri
+      end
+    end
+  end
+end
+</code>
+
+The controllers need a few updates to filter by Site (and the application view
+needs one for the list of recent articles, but I'm ignoring views). Application
+needs updates first:
+
+<code>
+class Application < Merb::Controller
+  before :sync_articles
+  before :choose_site
+  
+  protected
+
+  def sync_articles
+    Site.sync_all
+  end
+  
+  def choose_site
+    @site = Site.by_domain(request.host)
+  end
+end
+</code>
+
+I change the sync_articles method to use Site.sync_all. Then, I add a
+choose_site before filter to assign @site, using Site.by_domain (request.host
+is the full host name including any port number).
+
+  - Categories based on folders.
+
+##Multi Site views (and helpers (and public))
 
 ##Future
 
@@ -1052,3 +1242,6 @@ Still, the design "feels right" to me.
   - Search
   - Date links
   - RSS/Atom
+  - STI comments
+  - Multi/Single together comments
+  - sync action (for use by hooks)
