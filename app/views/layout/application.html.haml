@@ -17,7 +17,7 @@
         %h3
           = link_to 'Recent Articles', url(:articles)
         %ul
-          - Article.published(:limit => 15).each do |article|
+          - Article.published(:limit => 15, :site_id => @site.id).each do |article|
             %li
               = link_to article.title, url(:article, article)
   
