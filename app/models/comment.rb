@@ -31,4 +31,8 @@ class Comment
       attribute_set(:email, val)
     end
   end
+  
+  def site
+    self.article.site
+  end
 end

@@ -3,11 +3,15 @@ require File.join( File.dirname(__FILE__), "..", "spec_helper" )
 describe Comment do
 
   before(:each) do
+    Site.all.each { |s| s.destroy }
+    Article.all.each { |a| a.destroy }
     Comment.all.each { |c| c.destroy }
     @comment = Comment.new
     @comment.author = "Jane Doe"
     @comment.body = "This post was foolish"
-    @comment.article_id = 1
+    @site = Site.create(:name => 'site')
+    @article = Article.create(:site_id => @site.id)
+    @comment.article_id = @article.id
   end
   
   def comment(parent_id = nil)
@@ -15,7 +19,7 @@ describe Comment do
     c.author = "Author"
     c.body = "A comment on Comment #{parent_id}"
     c.parent_id = parent_id
-    c.article_id = 1
+    c.article_id = @article.id
     c.save
     return c
   end
