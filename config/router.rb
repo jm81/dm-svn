@@ -20,10 +20,16 @@
 # See merb/specs/merb/router.rb for a fairly complete usage sample.
 
 Merb.logger.info("Compiling routes...")
-Merb::Router.prepare do |r|
+Merb::Router.prepare do |r|  
   r.resources :articles do | article |
     article.resources :comments
   end
   
   r.match('/').to(:controller => 'articles', :action =>'index')
+  
+  r.match(%r[/categories/(.*)]).to(
+     :controller => 'articles', :action => 'index', :category => '[1]')
+  
+  r.match(%r[/(.*)]).to(
+     :controller => 'articles', :action => 'show', :path => '[1]')
 end
