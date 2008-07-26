@@ -19,7 +19,7 @@
         %ul
           - Article.published(:limit => 15, :site_id => @site.id).each do |article|
             %li
-              = link_to article.title, url(:article, article)
+              = link_to article.title, article_url(article)
   
       #main-container
         = (catch_content :for_layout)

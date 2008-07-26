@@ -20,5 +20,9 @@ module Merb
         raise RuntimeError, "parent must be an Article or Comment"
       end
     end
+    
+    def article_url(article)
+      "/#{article.path}"
+    end
   end
 end

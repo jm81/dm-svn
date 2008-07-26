@@ -1,8 +1,4 @@
 - @articles.each do |article|
   = partial 'article', :article => article, :show_links => true
   .article_links
-    %a{:href => url(:article, article)}== #{article.comments_count} Comments
-    %a{:href => url(:edit_article, article)} Edit
-    = delete_button(:article, article)
-
-= link_to('New', url(:new_article))
+    %a{:href => article_url(article)}== #{article.comments_count} Comments
