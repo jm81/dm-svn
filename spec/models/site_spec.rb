@@ -69,4 +69,31 @@ describe Site do
     
   end
   
+  describe 'categories' do
+    def article(path)
+      Article.create(:path => path, :site_id => @site.id, :published_at => Time.now - 3600)
+    end
+  
+    before(:each) do
+      @site.save
+      Article.all.each { |a| a.destroy }
+      article('general/first')
+      article('general/second')
+      article('general/subfolder/another')
+      article('computing/first')
+      Article.create(:path => 'general/othersite', :site_id => @site.id + 1)
+      Article.create(:path => 'different/othersite', :site_id => @site.id + 1)
+    end
+    
+    it "should returns categories Array" do
+      @site.categories.should == ['computing', 'general']
+    end
+    
+    it "should find published Articles by category" do
+      articles = @site.published_by_category('general')
+      articles.length.should == 3
+      articles = @site.published_by_category(nil)
+      articles.length.should == 4
+    end
+  end
 end

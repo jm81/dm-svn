@@ -45,6 +45,20 @@ class Site
     SiteSync.new(self).run
   end
   
+  def categories 
+    repository.adapter.query('SELECT category FROM articles WHERE site_id = ? group by category order by category', self.id)
+  end
+  
+  def published_by_category(category = nil, options = {})
+    conditions = "datetime(published_at) <= datetime('now') "
+    if category
+      conditions << "and path like '#{category}/%' "
+    end
+    Article.all(options.merge(
+          :conditions => [conditions + "and site_id = ?", self.id],
+          :order => [:published_at.desc]))
+  end
+  
   class << self
     # Find a Site by domain regex, prefer longest match.
     def by_domain(val)
