@@ -1079,7 +1079,7 @@ class Site
   
   # Content Filters
   property :article_filter, String
-  property :comments_filter, String
+  property :comment_filter, String
   
   # Timestamps
   property :created_at, DateTime
@@ -1127,7 +1127,7 @@ option, at least so long as I only use the one model (Article). So,
 body_property always returns :body. I'll show how all this hooks into SvnSync in
 a moment. Before that, though, a bit about the :domain_regex property.
 
-Wistle, is not designed to be user-friendly in the traditional sense, except
+Wistle is not designed to be user-friendly in the traditional sense, except
 when the user is defined as me. For example, adding Sites, deleting Comments,
 etc. must, at this point, be done through a console. That's great by me, but for
 someone without programming experience, Wistle would probably not be a good
@@ -1156,6 +1156,36 @@ class Site
       possible.sort!{ |a, b| b[1] <=> a[1] }
       possible[0] ? possible[0][0] : nil
     end
+  end
+end
+</code>
+
+I no longer need to include Wistle::Svn in the Article model, but I do need to
+add in the properties that Wistle::Svn took care of.
+
+<code>
+class Article
+    # Subversion-specific properties
+    property :path, String
+    property :svn_created_at, DateTime
+    property :svn_updated_at, DateTime
+    property :svn_created_rev, String
+    property :svn_updated_rev, String
+    property :svn_created_by, String
+    property :svn_updated_by, String
+end
+</code>
+
+I also update how Filters works to deal with the *_filter properties. To utilize
+these properties, in Article and Comment, I change the :filter option of the
+*body* property to set :default => :site . This tells the Filters::Resource
+module to use the Site model to determine default filters. In Comment, I also
+add a method site, because Filters may try to call this method.
+
+<code>
+class Comment
+  def site
+    @article.site
   end
 end
 </code>
@@ -1232,7 +1262,107 @@ I change the sync_articles method to use Site.sync_all. Then, I add a
 choose_site before filter to assign @site, using Site.by_domain (request.host
 is the full host name including any port number).
 
-  - Categories based on folders.
+One other bit I want to do that might as well fall in this section is folders
+as categories. My approach here is definately I reflection of my personal
+organizations styles; in addition, the code is probably not a good solution.
+
+Anyway, I want each top-level folder under the articles directory to represent
+a category; I want to be able to add additional subfolders without them creating
+additional categories. I also prefer to use only one category per article, with
+additional "categorization" through tags (which I will not be implementing in
+this already way too long article).
+
+To do so, I need to add a category property, which I'll update with a before
+:save hook
+
+<code>
+class Article
+  property :category, String
+  before :save, :update_category
+
+  def update_category
+    if attribute_dirty?(:category) || @category.nil?
+      attribute_set(:category, @path.split('/')[0]) if @path
+    end
+  end
+end
+</code>
+
+I then add two new methods to Site, one to get a list of categories, the second
+to find published articles by category.
+
+<code>
+class Site
+  def categories 
+    repository.adapter.query('SELECT category FROM articles WHERE site_id = ? group by category order by category', self.id)
+  end
+  
+  def published_by_category(category = nil, options = {})
+    conditions = "datetime(published_at) <= datetime('now') "
+    if category
+      conditions << "and path like '#{category}/%' "
+    end
+    Article.all(options.merge(
+          :conditions => [conditions + "and site_id = ?", self.id],
+          :order => [:published_at.desc]))
+  end
+end
+</code>
+
+Now is also a nice time for some routing updates, both to take advantage of
+categories, and for "permalink" paths for the Articles. I'm taking advantage
+of Merb's support for regular expressions in routes:
+
+<code>
+Merb::Router.prepare do |r|  
+  r.resources :articles do | article |
+    article.resources :comments
+  end
+  
+  r.match('/').to(:controller => 'articles', :action =>'index')
+  
+  r.match(%r[/categories/(.*)]).to(
+     :controller => 'articles', :action => 'index', :category => '[1]')
+  
+  r.match(%r[/(.*)]).to(
+     :controller => 'articles', :action => 'show', :path => '[1]')
+end
+</code>
+
+The articles resource remains to support comments, although it is probably not
+needed.
+
+The last match is the "permalink" one, so that there's not "articles" or other
+prefixes in permalinks; doing this obviously depends on the particular
+application.
+
+And Articles controller gets a couple of updates to take advantage of these
+routes:
+
+<code>
+class Articles < Application
+  # provides :xml, :yaml, :js
+
+  def index
+    @articles = @site.published_by_category(params[:category])
+    display @articles
+  end
+
+  def show
+    if params[:path]
+      @article = Article.first(:path => params[:path], :site_id => @site.id)
+    else
+      @article = Article.first(:id => params[:id], :site_id => @site.id)
+    end
+    
+    raise NotFound unless @article
+    display @article
+  end
+  
+end
+</code>
+
+And, now, the views...
 
 ##Multi Site views (and helpers (and public))
 
@@ -1245,3 +1375,4 @@ is the full host name including any port number).
   - STI comments
   - Multi/Single together comments
   - sync action (for use by hooks)
+  - pagination
