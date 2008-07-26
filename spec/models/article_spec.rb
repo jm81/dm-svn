@@ -5,9 +5,11 @@ describe Article do
   before(:each) do
     Comment.all.each { |c| c.destroy }
     Site.all.each { |s| s.destroy }
+    @site = Site.create(:name => 'site')
     @article = Article.new
     @article.title = "First Post"
     @article.body = "Howdy folks"
+    @article.site_id = @site.id
     @article.save
   end
   
@@ -21,10 +23,12 @@ describe Article do
   end
   
   it "should have many comments" do
+    @article2 = Article.create(:site_id => @site.id)
+    @article3 = Article.create(:site_id => @site.id)
     5.times do |i|
       comment(@article.id)
-      comment(@article.id + 1)
-      comment(@article.id + 2)
+      comment(@article2.id)
+      comment(@article3.id)
     end
     
     Article[@article.id].should have(5).comments
@@ -143,8 +147,8 @@ describe Article do
   
   it "should belong to a Site" do
     site = Site.create(:name => "newsite")
-    @article.site_id = site.id
-    @article.site.name.should == site.name
+    article = Article.create(:site_id => site.id)
+    article.site.name.should == site.name
   end
   
 end

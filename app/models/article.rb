@@ -31,6 +31,9 @@ class Article
     property :svn_updated_rev, String
     property :svn_created_by, String
     property :svn_updated_by, String
+    
+    property :category, String
+    before :save, :update_category
   
   # Set boolean from timestamp methods:
   # - {name}?
@@ -52,6 +55,12 @@ class Article
   # There's probably a better way to do this.
   def comments_count
     Comment.count(:article_id => @article.id)
+  end
+  
+  def update_category
+    if attribute_dirty?(:category) || @category.nil?
+      attribute_set(:category, @path.split('/')[0]) if @path
+    end
   end
   
   class << self
