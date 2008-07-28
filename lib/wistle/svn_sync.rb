@@ -11,7 +11,7 @@ module Wistle
     # call. This is inefficient, but--for now--not enough to justify more
     # complex code.
     def run
-      connect unless @repos
+      connect(@config.uri)
       return false if @repos.latest_revnum <= @model_row.revision
       
       changesets = [] # TODO Maybe revision + 1
@@ -120,18 +120,18 @@ module Wistle
       @model_row.update_attributes(:revision => rev)
     end
     
-    def connect
-      @ctx = context
+    def connect(uri)
+      @ctx = context(uri)
      
       # This will raise some error if connection fails for whatever reason.
       # I don't currently see a reason to handle connection errors here, as I
       # assume the best handling would be to raise another error.
-      @repos = ::Svn::Ra::Session.open(@config.uri, {}, callbacks)
+      @repos = ::Svn::Ra::Session.open(uri, {}, callbacks)
       @path_from_root = @config.uri[(@repos.repos_root.length)..-1]
       return true
     end
 
-    def context
+    def context(uri)
       # Client::Context, which paticularly holds an auth_baton.
       ctx = ::Svn::Client::Context.new
       if @config.username && @config.password
@@ -140,7 +140,7 @@ module Wistle
           cred.username = @config.username
           cred.password = @config.password
         end
-      elsif URI.parse(@config.uri).scheme == "file" 
+      elsif URI.parse(uri).scheme == "file" 
         ctx.add_username_prompt_provider(0) do |cred, realm, username, may_save|
           cred.username = @config.username || "ANON"
         end
