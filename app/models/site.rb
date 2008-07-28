@@ -10,6 +10,11 @@ class Site
   # Subversion
   property :contents_uri, Text
   property :contents_revision, Integer, :default => 0
+  property :views_uri, Text
+  property :views_revision, Integer, :default => 0
+  property :public_uri, Text
+  property :public_revision, Integer, :default => 0
+  
   property :username, String
   property :password, String
   property :property_prefix, String, :default => "ws:"
@@ -34,6 +39,23 @@ class Site
 
   def revision=(rev)
     attribute_set(:contents_revision, rev)
+  end
+  
+  # A URI based off of contents_uri to use as the base for building URI's
+  # for public and views
+  def base_uri
+    ary = contents_uri.split("/")
+    ary.pop if ary[-1].blank?
+    ary.pop
+    ary.join("/") + "/"
+  end
+  
+  def views_uri
+    @views_uri || (base_uri + "app/views")
+  end
+  
+  def public_uri
+    @public_uri || (base_uri + "public")
   end
   
   # For SvnSync's benefit
