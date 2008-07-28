@@ -1364,15 +1364,203 @@ end
 
 And, now, the views...
 
-##Multi Site views (and helpers (and public))
+##Multi Site views and public files
 
-##Future
+Finally, I want to be able to create the views, and do so using haml, erb, etc,
+and store them in Subversion, and have different views (and that means different
+stylesheets, etc) for each site. That involves three major actions:
+
+1. Decide how to organize the per-site files.
+2. Figure out how to get those files updates.
+3. Tell Merb where to find the files.
+
+My organization goes like this
+
+<code>
+/app
+  /sites
+    /SITENAME
+      /views
+      (possibly /helpers here in the future).
+/public
+  /sites
+    /SITENAME
+</code>
+
+The file updates is more tricky. An easy option would be to use svn:externals.
+This could be a hassle, though, if the Wistle app is hosting a lot of sites.
+
+Instead, I'm going to update SiteSync to also update the views and public files.
+This will be done by deleting the current directory (when there has been an
+update) and exporting the most recent files. First thing, a few more properties
+in Site:
+
+<code>
+class Site
+  property :views_uri, Text
+  property :views_revision, Integer, :default => 0
+  property :public_uri, Text
+  property :public_revision, Integer, :default => 0
+  
+  # A URI based off of contents_uri to use as the base for building URI's
+  # for public and views
+  def base_uri
+    ary = contents_uri.split("/")
+    ary.pop if ary[-1].blank?
+    ary.pop
+    ary.join("/") + "/"
+  end
+  
+  def views_uri
+    @views_uri || (base_uri + "app/views")
+  end
+  
+  def public_uri
+    @public_uri || (base_uri + "public")
+  end
+end
+</code>
+
+The additional methods give me some default URIs based on the contents_uri. This
+is based on my preferred organization.
+
+SiteSync is where the big updates happen. Basically, I add some methods to check
+if there are updates to the views or public files. If so, the current are
+deleted and an export is done. This means that the files could be inaccessible
+for a few seconds (depending on connection speed and repository size). I'm also
+not sure if/when reboots would be required in a production environment.
+
+<code>
+class SiteSync
+  def run
+    super
+    export_views
+    export_public
+  end
+  
+  def export_views
+    export("views", File.join(Merb::root, "app", "sites", @model_row.name, "views"))
+  end
+  
+  def export_public
+    export("public", File.join(Merb::root, "public", "sites", @model_row.name))    
+  end
+  
+  def export(name, export_path)
+    export_path = File.expand_path(export_path)
+    uri = @model_row.__send__("#{name}_uri")
+    rev = @model_row.__send__("#{name}_revision")
+    connect(uri)
+    return false if @repos.latest_revnum <= rev
+    updated_rev = @repos.stat(uri[(@repos.repos_root.length)..-1], @repos.latest_revnum).created_rev
+    return false if updated_rev <= rev
+    
+    FileUtils.mkdir_p(export_path)
+    FileUtils.rm_rf(export_path)
+    @ctx.export(uri, export_path)
+    @model_row.update_attributes("#{name}_revision" => @repos.latest_revnum)
+    true
+  end
+end
+</code>
+
+#export is the workhorse here, and the bulk is checking if we really need to do
+any work and that the path is ready for the export. The actual @ctx.export line
+is anticlimatic.
+
+This does require some updates in Wistle::SvnSync because we may be accessing
+multiple repositories within on instance. In short, #connect and #context both
+need to accept a uri option rather than relying on @config.uri. Probably some
+refactoring is in order (move all connection work to another class, for
+example).
+
+###Telling Merb where to find the files
+
+This turns out to be surprisingly easy, so long as the "correct" helper methods
+are used. On that note, I'll look first at the public files. This requires two
+override methods in GlobalHelpers.
+
+<code>
+module Merb
+  module GlobalHelpers
+    def image_tag(img, opts ={})
+      opts[:path] ||= "/sites/#{@site.name}/images/"
+      super(img, opts)
+    end
+    
+    def asset_path(asset_type, filename, local_path = false)
+      path = super(asset_type, filename, local_path)
+      "/sites/#{@site.name}#{path}"
+    end
+  end
+end
+</code>
+
+#image_tag generates a :path option to the site-specific image directory, unless
+:path has been set manually. It then calls super to let the original method do
+the real work.
+
+#asset_path is similar but, well, backwards. This is called by js_include_tag
+and css_include_tag to generate the appropriate path. I call super to let the
+parent method again do the real work. Then I prepend its result with the
+site-specific public path.
+
+Another option is if I were using Lighttpd or Apache or something similar to
+serve public files, I could use the web server's url rewriting capabilities.
+
+The approach I take for the views is fun. In Application, I add this little
+jewel.
+
+<code>
+class Application < Merb::Controller 
+  def render(thing = nil, opts = {})
+    self.class._template_roots << ["/u/apps/w2/app/sites/#{@site.name}/views", :_template_location]
+    ret = super
+    self.class._template_roots.pop
+    ret
+  end
+end
+</code>
+
+Is that an ugly hack or what? Surely there's a better way that back and forth
+modifying a class variable. Please? Well, there probably is, but I don't know
+Merb's internals well enough.
+
+The key is the class method (I believe representing a class variable),
+_template_roots . If I understand it all correctly, this is used by render to
+determine possible base paths and what method to use with that path. So, with
+each request to render, I tack on the current site's view path as a possible
+root, call super, then pop off the site's view path. Why this back and forth?
+Because one request could be directly followed by a request for a different
+Site.
+
+I half expect to be beaten in my sleep for that one. But it works.
+
+##Conclusion
+
+Of course, this is just the starting point, but it's met my goals, and I hope
+it's illustrated both some basics of Merb and DataMapper as well as how these
+can be used to interact with data that is not stored in an relational database.
+After all, great frameworks and libraries can really free us to focus on the
+important bits, but they can also make it difficult to see all the
+possibilities.
+
+After that cheesy statement, here's a few pieces I'd like to expand Wistle with
+in the future:
 
   - Tags
   - Search
-  - Date links
+  - Date links (i.e. /2008 gets all articles from 2008)
   - RSS/Atom
-  - STI comments
-  - Multi/Single together comments
-  - sync action (for use by hooks)
-  - pagination
+  - A sync action (for use by, e.g. subversion hooks)
+  - Pagination
+  - Per-site Helpers (maybe; I've debated whether there's any likely value in
+    this)
+  - Better support for STI (I've played with this a bit)
+
+Finally, it's worth mentioning that my intent with this article is illustrative
+and/or tutorial, rather than to start a "project". That is, I hope this helps
+people who are writing their own blog or similar application. However, should
+you decide to use Wistle, that's great, and I'd be happy to receive bug reports,
+feature requests, etc. Whether I will do anything with them probably depends on
+the day.
