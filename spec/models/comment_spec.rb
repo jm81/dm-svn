@@ -53,7 +53,7 @@ describe Comment do
     parent = comment
     @comment.parent_id = parent.id
     @comment.save
-    Comment[@comment.id].parent.id.should == parent.id
+    Comment.get(@comment.id).parent.id.should == parent.id
   end
   
   it "should have many replies" do
@@ -63,7 +63,7 @@ describe Comment do
       comment(@comment.id + 1)
     end
     
-    Comment[@comment.id].should have(5).replies
+    Comment.get(@comment.id).should have(5).replies
   end
   
   it "should update updated_at time" do

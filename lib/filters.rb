@@ -107,9 +107,17 @@ module Filters
         if filter = options.delete(:filter)
           @filtered_properties ||= []
           @filtered_properties << filter.merge({:name => name})
-          self.property(filter[:to], type) unless self.properties[filter[:to].to_s]
+          begin
+            self.properties[filter[:to].to_s]
+          rescue
+            self.property(filter[:to], type)
+          end
           if filter[:with].kind_of?(Symbol)
-            self.property(filter[:with], String) unless self.properties[filter[:with].to_s]
+            begin
+              self.properties[filter[:with].to_s]
+            rescue
+              self.property(filter[:with], String)
+            end
           end
         end
         

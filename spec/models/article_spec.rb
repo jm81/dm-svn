@@ -6,10 +6,9 @@ describe Article do
     Comment.all.each { |c| c.destroy }
     Site.all.each { |s| s.destroy }
     @site = Site.create(:name => 'site')
-    @article = Article.new
+    @article = Article.create(:site_id => @site.id)
     @article.title = "First Post"
     @article.body = "Howdy folks"
-    @article.site_id = @site.id
     @article.save
   end
   
@@ -31,7 +30,7 @@ describe Article do
       comment(@article3.id)
     end
     
-    Article[@article.id].should have(5).comments
+    Article.get(@article.id).should have(5).comments
   end
   
   it "should have direct_comments" do
@@ -43,8 +42,8 @@ describe Article do
       end
     end
     
-    Article[@article.id].should have(5).comments
-    Article[@article.id].should have(3).direct_comments
+    Article.get(@article.id).should have(5).comments
+    Article.get(@article.id).should have(3).direct_comments
   end
   
   it "should filter body to html" do

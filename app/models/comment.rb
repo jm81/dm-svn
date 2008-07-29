@@ -33,6 +33,6 @@ class Comment
   end
   
   def site
-    self.article.site
+    Article.get(@article_id).site
   end
 end

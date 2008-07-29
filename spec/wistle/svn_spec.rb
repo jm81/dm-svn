@@ -20,12 +20,12 @@ end
 
 describe Wistle::Svn do
   it "should add svn_* properties" do
-    MockArticleNoSvn.properties['svn_created_at'].should be_nil
-    MockArticleNoSvn.properties['svn_updated_at'].should be_nil
-    MockArticleNoSvn.properties['svn_created_rev'].should be_nil
-    MockArticleNoSvn.properties['svn_updated_rev'].should be_nil
-    MockArticleNoSvn.properties['svn_created_by'].should be_nil
-    MockArticleNoSvn.properties['svn_updated_by'].should be_nil
+    lambda { MockArticleNoSvn.properties['svn_created_at'] }.should raise_error(ArgumentError)
+    lambda { MockArticleNoSvn.properties['svn_updated_at'] }.should raise_error(ArgumentError)
+    lambda { MockArticleNoSvn.properties['svn_created_rev'] }.should raise_error(ArgumentError)
+    lambda { MockArticleNoSvn.properties['svn_updated_rev'] }.should raise_error(ArgumentError)
+    lambda { MockArticleNoSvn.properties['svn_created_by'] }.should raise_error(ArgumentError)
+    lambda { MockArticleNoSvn.properties['svn_updated_by'] }.should raise_error(ArgumentError)
 
     MockArticle.properties['svn_created_at'].should be_kind_of(DataMapper::Property)
     MockArticle.properties['svn_updated_at'].should be_kind_of(DataMapper::Property)
