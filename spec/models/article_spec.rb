@@ -125,6 +125,25 @@ describe Article do
       @article.comments_allowed_at.should be_nil
     end
   end
+  
+  it "should have many tags" do
+    @article.taggings.count.should == 0
+    @article.tags.length.should == 0
+    @article.taggings.create(:tag => Tag.create(:name => 'Wilbur'))
+    @article.taggings.create(:tag => Tag.create(:name => 'Charlotte'))
+    @article.tags.count.should == 2
+  end
+  
+  it "should set tags" do
+    @article.taggings.count.should == 0
+    @article.tags = "Charlotte; Wilbur"
+    @article.taggings.count.should == 2
+
+    @article.tags = "Aladdin"
+    @article.taggings.count.should == 1
+    @article.tags[0].name.should == "Aladdin"
+  end
+  
 
   describe 'class' do
     it "should find published articles" do

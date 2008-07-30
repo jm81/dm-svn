@@ -11,6 +11,9 @@ class Article
       :class_name => 'Comment',
       :order => [:created_at.asc],
       :parent_id => nil
+  
+  has n, :taggings
+  has n, :tags, :through => :taggings, :links => [:tagging]
 
     property :id, Integer, :serial => true
     property :site_id, Integer
@@ -55,6 +58,20 @@ class Article
   # There's probably a better way to do this.
   def comments_count
     Comment.count(:article_id => @article.id)
+  end
+  
+  # Sets tags.
+  # Accepts a semi-colon delimited list (or an Array)
+  # Existing taggings are deleted.
+  def tags=(t)
+    self.taggings.each {|tagging| tagging.destroy}
+    self.taggings.reload
+    t = t.split(';') unless t.is_a?(Array)
+    t.each do |name|
+      name = name.strip
+      tag = Tag.first(:name => name) || Tag.create(:name => name)
+      self.taggings.create(:tag => tag)
+    end
   end
   
   def update_category

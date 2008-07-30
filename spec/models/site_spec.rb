@@ -69,6 +69,47 @@ describe Site do
     
   end
   
+  it "should have many tags" do
+    @site.save
+    Article.create(:site_id => @site.id).tags = "Chicken; Soup"
+    @site.tags.count.should == 2
+  end
+  
+  describe "#articles_tagged" do
+    before(:each) do
+      @soup_site  = Site.create(:name => "soup", :domain_regex => '1\.com')
+      @chili_site = Site.create(:name => "chili", :domain_regex => '2\.com')
+      
+      a = Article.create(:site_id => @soup_site.id)
+      a.tags = "Chicken"
+      a.save
+      a = Article.create(:site_id => @soup_site.id)
+      a.tags = "Chicken; Soup"
+      a.save
+      
+      @soup  = Article.create(:site_id => @soup_site.id)
+      @soup.tags = "Tomato"
+      @soup.save
+      
+      @chili = Article.create(:site_id => @chili_site.id)
+      @chili.tags = "Tomato"
+      @chili.save
+    end
+
+    it "should get articles_tagged" do
+      @soup_site.articles_tagged("Chicken").length.should == 2
+      @soup_site.articles_tagged("Tomato")[0].id.should == @soup.id
+      @chili_site.articles_tagged("Tomato")[0].id.should == @chili.id
+    end
+  
+    it "should count_articles_tagged" do
+      @soup_site.count_articles_tagged("Chicken").should == 2
+      @soup_site.count_articles_tagged("Tomato").should == 1
+      @chili_site.count_articles_tagged("Chicken").should == 0
+      @chili_site.count_articles_tagged("Tomato").should == 1
+    end
+  end
+  
   describe 'categories' do
     def article(path)
       Article.create(:path => path, :site_id => @site.id, :published_at => Time.now - 3600)

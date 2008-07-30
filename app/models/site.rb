@@ -2,6 +2,8 @@ class Site
   include DataMapper::Resource
   
   has n, :articles
+  has n, :taggings, :through => :articles
+  has n, :tags, :through => :taggings
   
   property :id, Integer, :serial => true
   property :name, String, :unique => true, :nullable => false
@@ -79,6 +81,21 @@ class Site
     Article.all(options.merge(
           :conditions => [conditions + "and site_id = ?", self.id],
           :order => [:published_at.desc]))
+  end
+  
+  # Get all articles with a given tag
+  # Round-about because I can't figure out the ambiguous column name errors
+  def articles_tagged(tag)
+    tag = Tag.first(:name => tag)
+    return 0 unless tag
+    self.taggings(:tag_id => tag.id).collect{|t| t.article}
+  end
+
+  # Count all articles with a given tag
+  def count_articles_tagged(tag)
+    tag = Tag.first(:name => tag)
+    return 0 unless tag
+    self.taggings.count(:tag_id => tag.id)
   end
   
   class << self
