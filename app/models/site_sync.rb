@@ -11,7 +11,7 @@ class SiteSync < Wistle::SvnSync
   end
   
   def new_record
-    @model.new(:site_id => @model_row.id)
+    @model.create(:site_id => @model_row.id)
   end
   
   def run
