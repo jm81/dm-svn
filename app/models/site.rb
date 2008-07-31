@@ -32,11 +32,11 @@ class Site
 
   # For SvnSync's benefit
   def uri
-    @contents_uri
+    self.contents_uri
   end
 
   def revision
-    @contents_revision
+    self.contents_revision
   end
 
   def revision=(rev)
@@ -53,11 +53,11 @@ class Site
   end
   
   def views_uri
-    @views_uri || (base_uri + "app/views")
+    self.views_uri || (base_uri + "app/views")
   end
   
   def public_uri
-    @public_uri || (base_uri + "public")
+    self.public_uri || (base_uri + "public")
   end
   
   # For SvnSync's benefit
