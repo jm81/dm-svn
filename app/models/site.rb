@@ -53,11 +53,11 @@ class Site
   end
   
   def views_uri
-    self.views_uri || (base_uri + "app/views")
+    attribute_get(:views_uri) || (base_uri + "app/views")
   end
   
   def public_uri
-    self.public_uri || (base_uri + "public")
+    attribute_get(:public_uri) || (base_uri + "public")
   end
   
   # For SvnSync's benefit
