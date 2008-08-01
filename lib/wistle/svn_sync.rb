@@ -108,10 +108,14 @@ module Wistle
         record.svn_updated_at = date
         record.svn_updated_rev = rev
         record.svn_updated_by = author
-        if record.new_record?
+        if record.svn_created_rev.nil?
           record.svn_created_at = date
           record.svn_created_rev = rev
           record.svn_created_by = author
+        end
+        if !record.valid?
+          puts "Invalid #{short_path(path)} at revision #{rev}"
+          puts " - " + record.errors.full_messages
         end
         record.save
       end
