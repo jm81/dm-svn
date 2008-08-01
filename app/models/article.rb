@@ -17,7 +17,7 @@ class Article
 
     property :id, Integer, :serial => true
     property :site_id, Integer
-    property :title, String
+    property :title, String, :length => 255
     property :html, Text, :lazy => false
     property :body, Text,
              :filter => {:to => :html, :with => :filters, :default => :site}
@@ -27,7 +27,7 @@ class Article
     property :updated_at, DateTime
     
     # Subversion-specific properties
-    property :path, String
+    property :path, String, :length => 255
     property :svn_created_at, DateTime
     property :svn_updated_at, DateTime
     property :svn_created_rev, String
