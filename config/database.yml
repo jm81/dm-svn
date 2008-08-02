@@ -2,12 +2,12 @@
 
 :development: &defaults
   :adapter: sqlite3
-  :database: db/dev.db
+  :database: ../../data/wistle/dev.db
 
 :test:
   <<: *defaults
-  :database: db/test.db
+  :database: ../../data/wistle/test.db
 
 :production:
   <<: *defaults
-  :database: db/pro.db
+  :database: u/apps/data/fs/wistle/pro.db
