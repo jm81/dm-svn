@@ -115,7 +115,14 @@ class Site
       possible[0] ? possible[0][0] : nil
     end
     
-    def sync_all
+    def reset_exports
+      Site.all.each do |site|
+        site.update_attributes(:views_revision => 0, :public_revision => 0)
+      end
+    end
+    
+    def sync_all(force_exports = false)
+      reset_exports if force_exports
       Site.all.each do |site|
         site.sync if site.contents_uri
       end
