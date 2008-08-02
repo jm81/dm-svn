@@ -35,6 +35,10 @@ module Merb
       "/sites/#{@site.name}#{path}"
     end
     
+    def analytics(uacct)
+      partial('extras/google_analytics', :uacct => uacct)
+    end
+    
     def ads(path)
       partial("ads/#{path}") if Merb::environment == "production"
     end
