@@ -140,20 +140,40 @@ class BibleML
     self
   end
   
-  def fill_missing_text
+ def fill_missing_text
     @xml.elements.each("//fg:pp") do | pp_el |
       chapter = pp_el.attributes['p'].split(":")[0]
       m = chapter.match(/(.*)\s(\d+)\Z/)
       @passage_book = m[1]
       @passage_chapter = m[2]
     end
-  
-    @xml.elements.each("//fg:iq | //fg:bq") do | q_el |
+
+    @xml.elements.each("//fg:iq") do | q_el |
       unless q_el.has_elements? || q_el.has_text? 
         q_el << REXML::Text.new(get_passage(q_el.attributes['p'], q_el.attributes['v']))
       end
     end
+
+    @xml.elements.each("//fg:bq") do | q_el |
+      unless q_el.has_elements? || q_el.has_text?
+        psg = get_passage(q_el.attributes['p'], q_el.attributes['v'])
+        psg = wordwrap(" " + psg) + "\n"
+        q_el << REXML::Text.new(psg)
+      end
+    end
     self
+  end
+  
+  # Based on http://blade.nagaokaut.ac.jp/cgi-bin/scat.rb/ruby/ruby-talk/10655
+  def wordwrap(txt)
+    txt.gsub(/\t/,"     ").
+        gsub(/\"/,"&quot;").
+        gsub(/\'/,"&apos;").
+        gsub(/.{1,78}(?:\s|\Z)/){($& + 5.chr).
+        gsub(/\n\005/,"\n  ").
+        gsub(/\005/,"\n  ")}.
+        gsub(/&quot;/, "\"").
+        gsub(/&apos;/, "\'")
   end
   
   class << self
