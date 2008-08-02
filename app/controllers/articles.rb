@@ -17,4 +17,13 @@ class Articles < Application
     display @article
   end
   
+  def sync
+    @site.sync
+    render "sync complete"
+  end
+
+  def sync_all
+    Site.sync_all(params[:force_export])
+    render "sync_all complete"
+  end
 end

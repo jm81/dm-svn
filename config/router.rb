@@ -21,7 +21,7 @@
 
 Merb.logger.info("Compiling routes...")
 Merb::Router.prepare do |r|  
-  r.resources :articles do | article |
+  r.resources :articles, :collection =>  {:sync => :get, :sync_all => :get} do | article |
     article.resources :comments
   end
   
