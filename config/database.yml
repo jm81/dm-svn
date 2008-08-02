@@ -10,4 +10,4 @@
 
 :production:
   <<: *defaults
-  :database: u/apps/data/fs/wistle/pro.db
+  :database: /u/apps/data/fs/wistle/pro.db
