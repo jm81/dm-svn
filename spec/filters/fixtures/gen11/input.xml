@@ -1,0 +1,16 @@
+<fg:pp p="Genesis 11:10-20" />
+
+<fg:bq p="Genesis 11:10-14" v="NASB" />
+
+<fg:cm p="Genesis 11:10-11">This passage tells us something.</fg:cm>
+<fg:cm p="Genesis 11:12-14">Now these verses elaborate</fg:cm>
+
+<fg:bq p="Genesis 11:15-20" v="CEV">
+Already quoted.
+</fg:bq>
+
+<fg:cm p="Genesis 11:15-18">
+  This comment <fg:iq p="Genesis 11:20" v="NIV">quotes a verse</fg:iq>
+  This comment quotes a verse to fill in
+  <fg:iq p="Genesis 11:21" v="NIV" />
+</fg:cm>

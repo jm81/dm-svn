@@ -18,7 +18,8 @@ module Filters
   AVAILABLE_FILTERS = {
     'Smartypants' => [['rubypants', 'RubyPants']],
     'Markdown' => [['rdiscount', 'RDiscount'], ['bluecloth', 'BlueCloth']],
-    'Textile' => [['redcloth', 'RedCloth']]
+    'Textile' => [['redcloth', 'RedCloth']],
+    'BibleML' => [[File.dirname(__FILE__) + '/filters/bible_ml', 'BibleML']],
   }
   
   def self.process(filters, content)
