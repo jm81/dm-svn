@@ -1,5 +1,7 @@
 require 'rexml/document'
 require 'open-uri'
+require 'rubypants'
+require 'rdiscount'
 
 class BibleML
 
