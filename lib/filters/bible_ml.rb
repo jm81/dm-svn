@@ -29,13 +29,15 @@ class BibleML
   end
   
   def to_html
-    self.
+    txt = self.
       primary_passage.
       strip_comments.
       block_quotes.
       inline_quotes.
       wikipedia_links.
       to_s
+    txt = RubyPants.new(txt).to_html
+    txt = RDiscount.new(txt).to_html
   end
   
   # Convert fg:pp tags to Primary Passage links
