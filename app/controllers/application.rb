@@ -10,10 +10,15 @@ class Application < Merb::Controller
   end
   
   def update_template_roots
-    self.class._template_roots << ["#{Merb.root}/app/sites/#{@site.name}/views", :_template_location]
+    self.class._template_roots = [
+      ["#{Merb.root}/app/views", :_template_location],
+      ["#{Merb.root}/app/sites/#{@site.name}/views", :_template_location]
+    ]
   end
 
   def revert_template_roots
-    self.class._template_roots.pop
+    self.class._template_roots = [
+      ["#{Merb.root}/app/views", :_template_location]
+    ]
   end
 end
