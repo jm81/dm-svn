@@ -3,7 +3,7 @@
 .spacer
 %hr
 
-%h3== #{@article.comments_count} Comments
+%h3== #{@article.comments.count} Comments
 = link_to('Add a comment', reply_to(@article))
 
 %ul.comments
