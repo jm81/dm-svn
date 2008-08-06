@@ -1,0 +1,293 @@
+##Multi Site models
+
+Ah, point #4, multiple sites hosted on one Wistle instance. I'm not going to
+create additional "library" functionality to support this. After all, this is
+getting pretty application-specific. But, I am going to take advantage of the
+existing Wistle library.
+
+The key point here is going to be a Site model, that: a) Articles belong to; and
+b) takes over storing per-site configuration. In essence, it will replace
+Wistle::Config. The key is that "site-wide" configuration will subsitute for
+model-wide configuration. So, let's start with the Site model.
+
+    class Site
+      include DataMapper::Resource
+      
+      has n, :articles
+      
+      property :id, Integer, :serial => true
+      property :name, String, :unique => true, :nullable => false
+      property :domain_regex, String
+      
+      # Subversion
+      property :contents_uri, Text
+      property :contents_revision, Integer, :default => 0
+      property :username, String
+      property :password, String
+      property :property_prefix, String, :default => "ws:"
+      property :extension, String, :default => "txt"
+      
+      # Content Filters
+      property :article_filter, String
+      property :comment_filter, String
+      
+      # Timestamps
+      property :created_at, DateTime
+      property :updated_at, DateTime
+    end
+
+Here's the properties (and has n, :articles).
+Note that the properties under the "Subversion" heading
+are pretty close to the instance variables of Svn::Config. Also, notice 
+contents\_uri and contents\_revision. These match with Config's uri and revision.
+Why the prefix? Because I want to able to use a different uri (possibly in
+another repo) for views and public files. But that is for the next section. I
+could set up username, etc this same way; I won't for now, because I have no
+use for doing so. If I were, however, I would probably create yet another model,
+called "Config" or something that belongs to a Site, with a *role* property.
+Like I said, it's not needed for now, so I won't bother.
+
+The contents_* fields could create a problem though, because Wistle::SvnSync
+expects different names. A simple solution is some (not-quite) aliasing:
+
+    class Site
+      def uri
+        @contents_uri
+      end
+      
+      def revision
+        @contents_revision
+      end
+      
+      def revision=(rev)
+        attribute_set(:contents_revision, rev)
+      end
+      
+      def body_property
+        :body
+      end
+    end
+
+The revision= is also used by Wistle::SvnSync, and body\_property is another
+configuration option that SvnSync expects. With body\_property, there's only one
+option, at least so long as I only use the one model (Article). So,
+body\_property always returns :body. I'll show how all this hooks into SvnSync in
+a moment. Before that, though, a bit about the :domain\_regex property.
+
+Wistle is not designed to be user-friendly in the traditional sense, except
+when the user is defined as me. For example, adding Sites, deleting Comments,
+etc. must, at this point, be done through a console. That's great by me, but for
+someone without programming experience, Wistle would probably not be a good
+choice. Another example is the domain regex property. It's used by
+*Site.by_domain* (below) to find a site based on a domain. Except, as it's name
+implies, domain_regex is a regular expression. Great for me, might be less
+attractive to others.
+
+    class Site
+      class << self
+        # Find a Site by domain regex, prefer longest match.
+        def by_domain(val)
+          possible = []
+          
+          # Find matching Sites
+          Site.all.each do |s|
+            r = Regexp.new(s.domain_regex.to_s, true)
+            m = r.match(val)
+            if m
+              possible << [s, m[0].length] 
+            end
+          end
+          
+    			# Sort for longest match.
+          possible.sort!{ |a, b| b[1] <=> a[1] }
+          possible[0] ? possible[0][0] : nil
+        end
+      end
+    end
+
+I no longer need to include Wistle::Svn in the Article model, but I do need to
+add in the properties that Wistle::Svn took care of.
+
+    class Article
+        # Subversion-specific properties
+        property :path, String
+        property :svn_created_at, DateTime
+        property :svn_updated_at, DateTime
+        property :svn_created_rev, String
+        property :svn_updated_rev, String
+        property :svn_created_by, String
+        property :svn_updated_by, String
+    end
+
+I also update how Filters works to deal with the \*\_filter properties. To utilize
+these properties, in Article and Comment, I change the :filter option of the
+*body* property to set :default => :site . This tells the Filters::Resource
+module to use the Site model to determine default filters. In Comment, I also
+add a method #site, because Filters may try to call this method.
+
+    class Comment
+      def site
+        @article.site
+      end
+    end
+
+Now, you may have noticed a few weird methods that didn't do much in SvnSync,
+partically *get* and *new_record*. Here's where they come in. To use SvnSync
+with the new Site model (instead of the Wistle::Model Model), a few things have
+to change. First, Site doesn't have a *config* method, pointing to a
+Wistle::Config object. It does, however, respond to the the same methods as a
+Config object. Second, when creating or getting the content, we need to scope by
+Site. What to do? Inherit Wistle::SvnSync and override a few key methods.
+
+    class SiteSync < Wistle::SvnSync
+      def initialize(model_row)
+        @model_row = model_row
+        @model = Article
+        @config = model_row
+      end
+      
+      # Get an Article by site and path.
+      def get(path)
+        Article.first(:site_id => @model_row.id, :path => short_path(path))
+      end
+      
+      def new_record
+        @model.new(:site_id => @model_row.id)
+      end
+    end
+
+Awesome-sauce.
+
+Now, just hook in Site to SiteSync and all the ugly work is done!
+
+    class Site
+      def sync
+        SiteSync.new(self).run
+      end
+      
+      class << self
+        def sync_all
+          Site.all.each do |site|
+            site.sync if site.contents_uri
+          end
+        end
+      end
+    end
+
+The controllers need a few updates to filter by Site (and the application view
+needs one for the list of recent articles, but I'm ignoring views). Application
+needs updates first:
+
+    class Application < Merb::Controller
+      before :sync_articles
+      before :choose_site
+        
+      protected
+      
+      def sync_articles
+        Site.sync_all
+      end
+      
+      def choose_site
+        @site = Site.by_domain(request.host)
+      end
+    end
+
+I change the sync_articles method to use Site.sync\_all. Then, I add a
+choose_site before filter to assign @site, using Site.by\_domain (request.host
+is the full host name including any port number).
+
+One other bit I want to do that might as well fall in this section is folders
+as categories. My approach here is definately I reflection of my personal
+organizations styles; in addition, the code is probably not a good solution.
+
+Anyway, I want each top-level folder under the articles directory to represent
+a category; I want to be able to add additional subfolders without them creating
+additional categories. I also prefer to use only one category per article, with
+additional "categorization" through tags (which I will not be implementing in
+this already way too long article).
+
+To do so, I need to add a category property, which I'll update with a before
+:save hook
+
+    class Article
+      property :category, String
+      before :save, :update_category
+      
+      def update_category
+        if attribute_dirty?(:category) || @category.nil?
+          attribute_set(:category, @path.split('/')[0]) if @path
+        end
+      end
+    end
+
+I then add two new methods to Site, one to get a list of categories, the second
+to find published articles by category.
+
+    class Site
+      def categories 
+        repository.adapter.query('SELECT category FROM articles WHERE site_id = ? group by category order by category', self.id)
+      end
+      
+      def published_by_category(category = nil, options = {})
+        conditions = "datetime(published_at) <= datetime('now') "
+        if category
+          conditions << "and path like '#{category}/%' "
+        end
+        Article.all(options.merge(
+              :conditions => [conditions + "and site_id = ?", self.id],
+              :order => [:published_at.desc]))
+      end
+    end
+
+Now is also a nice time for some routing updates, both to take advantage of
+categories, and for "permalink" paths for the Articles. I'm taking advantage
+of Merb's support for regular expressions in routes:
+
+    Merb::Router.prepare do |r|  
+      r.resources :articles do | article |
+        article.resources :comments
+      end
+      
+      r.match('/').to(:controller => 'articles', :action =>'index')
+      
+      r.match(%r[/categories/(.*)]).to(
+         :controller => 'articles', :action => 'index', :category => '[1]')
+      
+      r.match(%r[/(.*)]).to(
+         :controller => 'articles', :action => 'show', :path => '[1]')
+    end
+
+The articles resource remains to support comments, although it is probably not
+needed.
+
+The last match is the "permalink" one, so that there's not "articles" or other
+prefixes in permalinks; doing this obviously depends on the particular
+application.
+
+And the Articles controller gets a couple of updates to take advantage of these
+routes:
+
+    class Articles < Application
+      # provides :xml, :yaml, :js
+      
+      def index
+        @articles = @site.published_by_category(params[:category])
+        display @articles
+      end
+      
+      def show
+        if params[:path]
+          @article = Article.first(:path => params[:path], :site_id => @site.id)
+        else
+          @article = Article.first(:id => params[:id], :site_id => @site.id)
+        end
+    
+        raise NotFound unless @article
+        display @article
+      end
+    end
+
+[Revision 73](http://code.google.com/p/wistle/source/browse/?r=73#svn/trunk/)
+
+And, next, the views...
