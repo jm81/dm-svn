@@ -17,6 +17,10 @@ class Articles < Application
     display @article
   end
   
+  def search
+    render
+  end
+  
   def sync
     @site.sync
     render "sync complete"
