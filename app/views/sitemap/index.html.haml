@@ -1,0 +1,20 @@
+%h1 Sitemap
+
+%h2 Home
+%ul
+  %li= link_to('index', '/')
+
+%h2 Categories
+%ul
+  - @categories.each do |category|
+    %li= link_to(category, "categories/" + category)
+
+%h2 Articles
+%ul
+  - @articles.all.each do |article|
+    %li= link_to(article.title, 'article.path')
+
+%h2 Tags
+%ul
+  - @tags.each do |tag|
+    %li= link_to(tag.name, "tags/" + tag.name)

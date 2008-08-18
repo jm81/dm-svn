@@ -25,7 +25,10 @@ Merb::Router.prepare do |r|
     article.resources :comments
   end
   
-  r.match('/').to(:controller => 'articles', :action =>'index')
+  r.match('/').to(:controller => 'articles', :action =>'index').name(:root)
+  
+  r.match('/sitemap.xml').to(:controller => 'sitemap', :action => 'index', :format => "xml")
+  r.match('/sitemap').to(:controller => 'sitemap', :action => 'index').name(:sitemap)
   
   r.match(%r[/search/results]).to(
     :controller => 'articles', :action => 'search')
@@ -34,5 +37,5 @@ Merb::Router.prepare do |r|
      :controller => 'articles', :action => 'index', :category => '[1]')
   
   r.match(%r[/(.*)]).to(
-     :controller => 'articles', :action => 'show', :path => '[1]')
+     :controller => 'articles', :action => 'show', :path => '[1]').name(:article_path)
 end
