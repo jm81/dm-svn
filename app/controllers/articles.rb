@@ -2,7 +2,12 @@ class Articles < Application
   # provides :xml, :yaml, :js
 
   def index
-    @articles = @site.published_by_category(params[:category])
+    if params[:tag]
+      @articles = @site.articles_tagged(params[:tag])
+    else
+      @articles = @site.published_by_category(params[:category])
+    end
+    
     display @articles
   end
 

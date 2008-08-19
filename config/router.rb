@@ -35,6 +35,9 @@ Merb::Router.prepare do |r|
   
   r.match(%r[/categories/(.*)]).to(
      :controller => 'articles', :action => 'index', :category => '[1]')
+     
+  r.match(%r[/tags/(.*)]).to(
+     :controller => 'articles', :action => 'index', :tag => '[1]')
   
   r.match(%r[/(.*)]).to(
      :controller => 'articles', :action => 'show', :path => '[1]').name(:article_path)
