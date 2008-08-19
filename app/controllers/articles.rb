@@ -1,11 +1,14 @@
 class Articles < Application
   # provides :xml, :yaml, :js
+  include Merb::PaginationHelper
 
   def index
     if params[:tag]
-      @articles = @site.articles_tagged(params[:tag])
+      @articles = @site.articles_tagged(
+          params[:tag], :page => params[:page], :limit => 5)
     else
-      @articles = @site.published_by_category(params[:category])
+      @articles = @site.published_by_category(
+          params[:category], :page => params[:page], :limit => 5)
     end
     
     display @articles

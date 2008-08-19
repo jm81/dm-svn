@@ -85,10 +85,18 @@ class Site
   
   # Get all articles with a given tag
   # Round-about because I can't figure out the ambiguous column name errors
-  def articles_tagged(tag)
+  def articles_tagged(tag, options = {})
     tag = Tag.first(:name => tag)
     return 0 unless tag
-    self.taggings(:tag_id => tag.id).collect{|t| t.article}
+    t = self.taggings(options.merge(:tag_id => tag.id))
+    collection = t.collect{|tagging| tagging.article}
+    
+    collection.instance_variable_set(:@pages, t.pages)
+    collection.instance_variable_set(:@current_page, t.current_page)
+    def collection.pages; @pages; end
+    def collection.current_page; @current_page; end
+    
+    collection
   end
 
   # Count all articles with a given tag

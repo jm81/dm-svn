@@ -1,6 +1,7 @@
 class Article
   include DataMapper::Resource
   include Filters::Resource
+  extend Pagination
   
   # Setup Wistle::Config info here or in database.yml
   
