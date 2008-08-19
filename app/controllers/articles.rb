@@ -1,5 +1,5 @@
 class Articles < Application
-  # provides :xml, :yaml, :js
+  provides :xml
   include Merb::PaginationHelper
 
   def index
