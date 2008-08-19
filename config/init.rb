@@ -78,7 +78,7 @@ end
 
 # Uncomment for DataMapper ORM
 use_orm :datamapper
-dependencies 'lib/wistle.rb', 'lib/filters.rb'
+dependencies 'lib/wistle.rb', 'lib/filters.rb', 'lib/pagination.rb'
 
 # Uncomment for ActiveRecord ORM
 # use_orm :activerecord
