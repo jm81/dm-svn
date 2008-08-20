@@ -21,7 +21,7 @@
 
 Merb.logger.info("Compiling routes...")
 Merb::Router.prepare do |r|  
-  r.resources :articles, :collection =>  {:sync => :get, :sync_all => :get} do | article |
+  r.resources :articles, :collection =>  {:sync => :get, :sync_all => :get, :by_date => :get} do | article |
     article.resources :comments
   end
   
@@ -38,6 +38,13 @@ Merb::Router.prepare do |r|
      
   r.match(%r[/tags/(.*)]).to(
      :controller => 'articles', :action => 'index', :tag => '[1]')
+     
+  # I really don't understand Merb routing
+  r.match(%r[/(\d{4})]) do |a|
+    a.match(%r[/(\d{1,2})/(\d{1,2})]).to(:year => '[1]', :month => '[2]', :day => '[3]', :action => 'by_date', :controller => 'articles')
+    a.match(%r[/(\d{1,2})]).to(:year => '[1]', :month => '[2]', :action => 'by_date', :controller => 'articles')
+    a.match('').to(:year => '[1]', :action => 'by_date', :controller => 'articles')
+  end
   
   r.match(%r[/(.*)]).to(
      :controller => 'articles', :action => 'show', :path => '[1]').name(:article_path)

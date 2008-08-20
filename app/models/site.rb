@@ -83,6 +83,21 @@ class Site
           :order => [:published_at.desc]))
   end
   
+  def published_by_date(year, month, day, options)
+    dt = Time.parse("#{year}-#{month || 1}-#{day || 1}").strftime("%Y-%m-%d")
+    if day
+      c = ["strftime('%Y-%m-%d', published_at) = strftime('%Y-%m-%d', ?) and site_id = ?", dt, self.id]
+    elsif month
+      c = ["strftime('%Y-%m', published_at) = strftime('%Y-%m', ?) and site_id = ?", dt, self.id]
+    else
+      c = ["strftime('%Y', published_at) = strftime('%Y', ?) and site_id = ?", dt, self.id]
+    end
+    
+    Article.all(options.merge(
+          :conditions => c,
+          :order => [:published_at.desc]))
+  end
+  
   # Get all articles with a given tag
   # Round-about because I can't figure out the ambiguous column name errors
   def articles_tagged(tag, options = {})

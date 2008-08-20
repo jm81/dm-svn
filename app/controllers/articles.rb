@@ -13,6 +13,13 @@ class Articles < Application
     
     display @articles
   end
+  
+  def by_date
+    @articles = @site.published_by_date(params[:year], params[:month], params[:day],
+        :page => params[:page], :limit => 5)
+    
+    render :index
+  end
 
   def show
     if params[:path]
