@@ -2,6 +2,7 @@ class Site
   include DataMapper::Resource
   
   has n, :articles
+  has n, :comments, :through => :articles
   has n, :taggings, :through => :articles
   has n, :tags, :through => :taggings
   
@@ -112,6 +113,36 @@ class Site
     def collection.current_page; @current_page; end
     
     collection
+  end
+  
+  # Store the article paths for all comments.
+  def store_article_paths
+    # calling self.comments directly was giving frozen array errors.
+    self.articles.each do |article|
+      article.comments.each do |comment|
+        comment.store_article_path
+      end
+    end
+    
+  end
+  
+  # Reassociate comments with articles based on Article#path for all comments.
+  # This is designed to be used if all articles need to be reloaded from
+  # Subversion repo, which would cause loss of associations. As a major issue,
+  # comments are only associated to a Site via an Article, so this really isn't
+  # that useful; this should be corrected soon. If all comments are 
+  # reassociated, returns +true+; otherwise, an Array of Comment that did not
+  # reassociate.
+  def reassociate_comments
+    failed = []
+    
+    self.articles.each do |article|
+      article.comments.each do |comment|
+        failed << comment unless comment.reassociate_to_article
+      end
+    end
+    
+    failed.empty? ? true : failed
   end
 
   # Count all articles with a given tag

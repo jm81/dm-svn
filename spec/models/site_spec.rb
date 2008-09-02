@@ -137,4 +137,47 @@ describe Site do
       articles.length.should == 4
     end
   end
+  
+  describe 'comments methods' do
+    def article(path)
+      Article.create(:path => path, :site_id => @site.id, :published_at => Time.now - 3600)
+    end
+    
+    def comment(article_id)
+      article_id = article_id.id if article_id.kind_of?(Article)
+      c = Comment.new
+      c.author = "Author"
+      c.body = "A comment on Article #{article_id}"
+      c.article_id = article_id
+      c.save
+      return c
+    end
+    
+    before(:each) do
+      @site.save
+      Article.all.each { |a| a.destroy }
+      Comment.all.each { |c| c.destroy }
+      @articles = [article('path/first'), article('path/second')]
+      @comments = [comment(@articles[0]), comment(@articles[1]), comment(@articles[0]), comment(@articles[1])]
+    end
+  
+    it 'should store article paths for all comments' do
+      @site.store_article_paths
+      0.upto(3) do |i|
+        @comments[i].reload
+        @comments[i].stored_article_path.should == @articles[i % 2].path
+      end
+    end
+    
+    it 'should reassociate all comments' do
+      @site.store_article_paths
+      @site.reassociate_comments.should be(true)
+      
+      @comments.each do |c|
+        c.update_attributes(:stored_article_path => 'not/a/path')
+      end
+      @site.reassociate_comments.length.should == 4
+    end
+    
+  end
 end

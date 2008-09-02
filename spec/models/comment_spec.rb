@@ -10,7 +10,8 @@ describe Comment do
     @comment.author = "Jane Doe"
     @comment.body = "This post was foolish"
     @site = Site.create(:name => 'site')
-    @article = Article.create(:site_id => @site.id)
+    @article_path = "path/to/article"
+    @article = Article.create(:site_id => @site.id, :path => @article_path)
     @comment.article_id = @article.id
   end
   
@@ -90,6 +91,33 @@ describe Comment do
     @comment.filters = "Markdown"
     @comment.save
     @comment.html.should == "<p>Howdy <em>folks</em></p>\n"
+  end
+  
+  it 'should have access to article path' do
+    @comment.save
+    @comment.article.path.should == @article_path
+  end
+  
+  it 'should store article path' do
+    @comment.save
+    @comment.stored_article_path.should be_nil
+    @comment.store_article_path
+    @comment.stored_article_path.should == @article_path
+  end
+  
+  it 'should reassociate to an article' do
+    new_article = Article.create(:site_id => @site.id, :path => 'path/to/second')
+    @comment.stored_article_path = @article_path
+    @comment.save
+    @comment.article = new_article
+    @comment.save
+    @comment.article.should be(new_article)
+    @comment.reassociate_to_article.should be(true)
+    @comment.article_id.should == @article.id
+
+    @comment.update_attributes(:stored_article_path => 'no/article/path')
+    @comment.reassociate_to_article.should be(false)
+    @comment.article_id.should == @article.id
   end
 
 end

@@ -20,6 +20,7 @@ class Comment
     property :body, Text, :nullable => false,
              :filter => {:to => :html, :with => :filters, :default => :site}
     property :article_id, Integer, :nullable => false
+    property :stored_article_path, Text
     property :parent_id, Integer
     property :created_at, DateTime
     property :updated_at, DateTime
@@ -34,5 +35,23 @@ class Comment
   
   def site
     Article.get(@article_id).site
+  end
+  
+  def store_article_path
+    update_attributes(:stored_article_path => self.article.path)
+  end
+  
+  def reassociate_to_article
+    self.reload # Ensure we have the latest path from database.
+    
+    site.articles.each do |a|
+      if a.path == @stored_article_path
+        self.article_id = a.id
+        self.save
+        return true
+      end  
+    end
+
+    return false
   end
 end
