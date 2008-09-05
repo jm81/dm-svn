@@ -28,7 +28,7 @@ class Article
     property :updated_at, DateTime
     
     # Subversion-specific properties
-    property :path, String, :length => 255
+    property :svn_name, Text, :lazy => false
     property :svn_created_at, DateTime
     property :svn_updated_at, DateTime
     property :svn_created_rev, String
@@ -71,8 +71,14 @@ class Article
   
   def update_category
     if attribute_dirty?(:category) || @category.nil?
-      attribute_set(:category, @path.split('/')[0]) if @path
+      attribute_set(:category, @svn_name.split('/')[0]) if @svn_name
     end
+  end
+  
+  # The path from the svn root for the model. For the moment, just an alias
+  # of +svn_name+.
+  def path
+    @svn_name
   end
   
   class << self

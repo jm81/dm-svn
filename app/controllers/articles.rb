@@ -23,7 +23,7 @@ class Articles < Application
 
   def show
     if params[:path]
-      @article = Article.first(:path => params[:path], :site_id => @site.id)
+      @article = Article.first(:svn_name => params[:path], :site_id => @site.id)
     else
       @article = Article.first(:id => params[:id], :site_id => @site.id)
     end

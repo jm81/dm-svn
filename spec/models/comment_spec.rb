@@ -11,7 +11,7 @@ describe Comment do
     @comment.body = "This post was foolish"
     @site = Site.create(:name => 'site')
     @article_path = "path/to/article"
-    @article = Article.create(:site_id => @site.id, :path => @article_path)
+    @article = Article.create(:site_id => @site.id, :svn_name => @article_path)
     @comment.article_id = @article.id
   end
   
@@ -106,7 +106,7 @@ describe Comment do
   end
   
   it 'should reassociate to an article' do
-    new_article = Article.create(:site_id => @site.id, :path => 'path/to/second')
+    new_article = Article.create(:site_id => @site.id, :svn_name => 'path/to/second')
     @comment.stored_article_path = @article_path
     @comment.save
     @comment.article = new_article

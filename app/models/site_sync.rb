@@ -7,7 +7,7 @@ class SiteSync < Wistle::SvnSync
   
   # Get an Article by site and path.
   def get(path)
-    Article.first(:site_id => @model_row.id, :path => short_path(path))
+    Article.first(:site_id => @model_row.id, :svn_name => short_path(path))
   end
   
   def new_record

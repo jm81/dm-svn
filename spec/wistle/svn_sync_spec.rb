@@ -35,16 +35,16 @@ describe Wistle::SvnSync do
       @sync.run
       MockSyncModel.count.should == 3
       
-      comp = MockSyncModel.first(:path => "computations")
+      comp = MockSyncModel.first(:svn_name => "computations")
       comp.body.should == 'Computers do not like salsa very much.'
       comp.svn_updated_rev.to_i.should == 7
       comp.svn_created_rev.to_i.should == 7
       
-      phil = MockSyncModel.first(:path => "philosophy")
+      phil = MockSyncModel.first(:svn_name => "philosophy")
       phil.svn_updated_rev.to_i.should == 2
       phil.svn_created_rev.to_i.should == 2
   
-      pub  = MockSyncModel.first(:path => "just_published")
+      pub  = MockSyncModel.first(:svn_name => "just_published")
       published_time = Time.parse(pub.published_at.strftime("%Y-%m-%d %H:%M:%S"))
       published_time.should be_close(Time.now - 3600, 100)
       pub.svn_created_by.should == "author"
@@ -52,7 +52,7 @@ describe Wistle::SvnSync do
       pub.svn_updated_rev.to_i.should == 7
       pub.svn_created_rev.to_i.should == 3
       
-      MockSyncModel.first(:path => "computers.txt").should be_nil
+      MockSyncModel.first(:svn_name => "computers.txt").should be_nil
     end
     
     it "should update Wistle::Model entry" do

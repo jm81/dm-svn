@@ -5,7 +5,7 @@ class MockArticle
   include DataMapper::Resource
   include Wistle::Svn
   
-  property :id, Integer
+  property :id, Integer, :serial => true
   property :title, String
   property :contents, Text, :body_property => true
 end
@@ -13,27 +13,18 @@ end
 class MockArticleNoSvn
   include DataMapper::Resource
   
-  property :id, Integer
+  property :id, Integer, :serial => true
   property :title, String
   property :contents, Text
 end
 
 describe Wistle::Svn do
   it "should add svn_* properties" do
-    lambda { MockArticleNoSvn.properties['svn_created_at'] }.should raise_error(ArgumentError)
-    lambda { MockArticleNoSvn.properties['svn_updated_at'] }.should raise_error(ArgumentError)
-    lambda { MockArticleNoSvn.properties['svn_created_rev'] }.should raise_error(ArgumentError)
-    lambda { MockArticleNoSvn.properties['svn_updated_rev'] }.should raise_error(ArgumentError)
-    lambda { MockArticleNoSvn.properties['svn_created_by'] }.should raise_error(ArgumentError)
-    lambda { MockArticleNoSvn.properties['svn_updated_by'] }.should raise_error(ArgumentError)
-
-    MockArticle.properties['svn_created_at'].should be_kind_of(DataMapper::Property)
-    MockArticle.properties['svn_updated_at'].should be_kind_of(DataMapper::Property)
-    MockArticle.properties['svn_created_rev'].should be_kind_of(DataMapper::Property)
-    MockArticle.properties['svn_updated_rev'].should be_kind_of(DataMapper::Property)
-    MockArticle.properties['svn_created_by'].should be_kind_of(DataMapper::Property)
-    MockArticle.properties['svn_updated_by'].should be_kind_of(DataMapper::Property)
-    MockArticle.properties['path'].should be_kind_of(DataMapper::Property)
+    fields = %w{name created_at updated_at created_rev updated_rev created_by updated_by}
+    fields.each do | field |
+      lambda { MockArticleNoSvn.properties["svn_#{field}"] }.should raise_error(ArgumentError)
+      MockArticle.properties["svn_#{field}"].should be_kind_of(DataMapper::Property)
+    end
   end
   
   it "should assign @config to an instance of Wistle::Config" do
@@ -44,6 +35,18 @@ describe Wistle::Svn do
   
   it "should add an :body_property options to including class" do
     MockArticle.config.body_property.should == "contents"
+  end
+  
+  it "should alias svn_name as name" do
+    m = MockArticle.new
+    m.svn_name = 'path/to/name'
+    m.name.should == 'path/to/name'
+  end
+  
+  it "should alias svn_name as path" do
+    m = MockArticle.new
+    m.svn_name = 'path/to/name'
+    m.path.should == 'path/to/name'
   end
   
   describe ".svn_repository" do

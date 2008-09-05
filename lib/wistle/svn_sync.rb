@@ -42,7 +42,7 @@ module Wistle
     
     # Get an object of the @model, by path.
     def get(path)
-      @model.first(:path => short_path(path))
+      @model.first(:svn_name => short_path(path))
     end
     
     # Create a new object of the @model
@@ -76,7 +76,7 @@ module Wistle
           # Change the path. No need to perform other updates, as this is an
           # "A" or "R" and thus is in the +modified+ Array.
           record = get(del)
-          record.update_attributes(:path => short_path(copy[0])) if record
+          record.update_attributes(:svn_name => short_path(copy[0])) if record
         end
       end
       
@@ -104,7 +104,7 @@ module Wistle
         end
 
         # update revision props
-        record.path = short_path(path)
+        record.svn_name = short_path(path)
         record.svn_updated_at = date
         record.svn_updated_rev = rev
         record.svn_updated_by = author

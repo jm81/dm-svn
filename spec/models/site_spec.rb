@@ -112,7 +112,7 @@ describe Site do
   
   describe 'categories' do
     def article(path)
-      Article.create(:path => path, :site_id => @site.id, :published_at => Time.now - 3600)
+      Article.create(:svn_name => path, :site_id => @site.id, :published_at => Time.now - 3600)
     end
   
     before(:each) do
@@ -122,8 +122,8 @@ describe Site do
       article('general/second')
       article('general/subfolder/another')
       article('computing/first')
-      Article.create(:path => 'general/othersite', :site_id => @site.id + 1)
-      Article.create(:path => 'different/othersite', :site_id => @site.id + 1)
+      Article.create(:svn_name => 'general/othersite', :site_id => @site.id + 1)
+      Article.create(:svn_name => 'different/othersite', :site_id => @site.id + 1)
     end
     
     it "should returns categories Array" do
@@ -140,7 +140,7 @@ describe Site do
   
   describe 'comments methods' do
     def article(path)
-      Article.create(:path => path, :site_id => @site.id, :published_at => Time.now - 3600)
+      Article.create(:svn_name => path, :site_id => @site.id, :published_at => Time.now - 3600)
     end
     
     def comment(article_id)

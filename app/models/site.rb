@@ -77,7 +77,7 @@ class Site
   def published_by_category(category = nil, options = {})
     conditions = "datetime(published_at) <= datetime('now') "
     if category
-      conditions << "and path like '#{category}/%' "
+      conditions << "and svn_name like '#{category}/%' "
     end
     Article.all(options.merge(
           :conditions => [conditions + "and site_id = ?", self.id],
