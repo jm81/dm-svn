@@ -32,3 +32,13 @@ desc "Add new files to subversion"
 task :svn_add do
    system "svn status | grep '^\?' | sed -e 's/? *//' | sed -e 's/ /\ /g' | xargs svn add"
 end
+
+namespace :spec do
+
+  desc "Run all Wistle specs"
+  Spec::Rake::SpecTask.new('wistle') do |t|
+    t.spec_opts = ["--format", "specdoc", "--colour"]
+    t.spec_files = Dir['spec/wistle/**/*_spec.rb'].sort
+  end
+
+end
