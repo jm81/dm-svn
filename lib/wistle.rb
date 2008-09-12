@@ -4,5 +4,5 @@ module Wistle
 end
 
 %w{config svn model}.each do |f|
-  require File.dirname(__FILE__) + "/wistle/#{f}.rb"
+  require File.expand_path(File.dirname(__FILE__) + "/wistle/#{f}.rb")
 end

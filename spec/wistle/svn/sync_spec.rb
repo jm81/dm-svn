@@ -1,16 +1,4 @@
-require File.join( File.dirname(__FILE__), "..", "..", "spec_helper" )
-require File.join( File.dirname(__FILE__), "..", "..", "..", "lib", "wistle.rb" )
-
-class MockSyncModel
-  include DataMapper::Resource
-  include Wistle::Svn
-  
-  property :id, Integer, :serial => true
-  property :title, String
-  property :body, Text, :body_property => true
-  property :published_at, DateTime
-  
-end
+require File.join( File.dirname(__FILE__), "..", "spec_helper" )
 
 describe Wistle::Svn::Sync do
   describe "#run" do

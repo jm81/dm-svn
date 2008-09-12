@@ -1,22 +1,4 @@
-require File.join( File.dirname(__FILE__), "..", "spec_helper" )
-require File.join( File.dirname(__FILE__), "..", "..", "lib", "wistle.rb" )
-
-class MockArticle
-  include DataMapper::Resource
-  include Wistle::Svn
-  
-  property :id, Integer, :serial => true
-  property :title, String
-  property :contents, Text, :body_property => true
-end
-
-class MockArticleNoSvn
-  include DataMapper::Resource
-  
-  property :id, Integer, :serial => true
-  property :title, String
-  property :contents, Text
-end
+require File.join( File.dirname(__FILE__), "spec_helper" )
 
 describe Wistle::Svn do
   it "should add svn_* properties" do
