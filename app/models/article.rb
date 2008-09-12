@@ -1,5 +1,6 @@
 class Article
   include DataMapper::Resource
+  include Wistle::Svn
   include Filters::Resource
   extend Pagination
   
@@ -16,28 +17,20 @@ class Article
   has n, :taggings
   has n, :tags, :through => :taggings, :links => [:tagging]
 
-    property :id, Integer, :serial => true
-    property :site_id, Integer
-    property :title, String, :length => 255
-    property :html, Text, :lazy => false
-    property :body, Text,
-             :filter => {:to => :html, :with => :filters, :default => :site}
-    property :published_at, DateTime
-    property :comments_allowed_at, DateTime
-    property :created_at, DateTime
-    property :updated_at, DateTime
-    
-    # Subversion-specific properties
-    property :svn_name, Text, :lazy => false
-    property :svn_created_at, DateTime
-    property :svn_updated_at, DateTime
-    property :svn_created_rev, String
-    property :svn_updated_rev, String
-    property :svn_created_by, String
-    property :svn_updated_by, String
-    
-    property :category, String
-    before :save, :update_category
+  property :id, Integer, :serial => true
+  property :site_id, Integer
+  property :title, String, :length => 255
+  property :html, Text, :lazy => false
+  property :body, Text,
+           :filter => {:to => :html, :with => :filters, :default => :site},
+           :body_property => true
+  property :published_at, DateTime
+  property :comments_allowed_at, DateTime
+  property :created_at, DateTime
+  property :updated_at, DateTime
+  
+  property :category, String
+  before :save, :update_category
   
   # Set boolean from timestamp methods:
   # - {name}?
