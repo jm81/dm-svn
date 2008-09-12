@@ -35,15 +35,15 @@ module Wistle
         @config ||= Config.new
       end
       
-      # Override belong_to to add +:wistle+ option. If :wistle => true is
+      # Override belongs_to to add +:wistle+ option. If :wistle => true is
       # included in the options, SvnSync will also sync the +belongs_to+ model.
       # For example, <code>belongs_to :category, :wistle => true</code>, means
       # that the Category model will also be updated by SvnSync, and be based on
       # folders. Folders can have svn properties set, and/or a meta.yml file
       # with properties.
-      def belongs_to(name, options={})
-        
-      end
+      # def belongs_to(name, options={})
+      #   
+      # end
       
       # Override DataMapper's +property+ class method to accept as an option
       # +body_property+. Setting this option tells Wistle::Svn that this field
@@ -67,9 +67,13 @@ module Wistle
       end
       
       def sync
-        Wistle::SvnSync.new(svn_repository).run
+        Wistle::Svn::Sync.new(svn_repository).run
       end
     end
     
   end
+end
+
+%w{sync changeset}.each do |f|
+  require File.dirname(__FILE__) + "/svn/#{f}.rb"
 end

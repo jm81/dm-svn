@@ -4,6 +4,7 @@ module Wistle
             :body_property, :property_prefix, :extension]
     
     attr_accessor *OPTS
+    attr_accessor :path_from_root # Used by Sync.
     
     def initialize
       # Set defaults

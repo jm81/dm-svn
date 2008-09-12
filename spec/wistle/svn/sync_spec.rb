@@ -1,5 +1,5 @@
-require File.join( File.dirname(__FILE__), "..", "spec_helper" )
-require File.join( File.dirname(__FILE__), "..", "..", "lib", "wistle.rb" )
+require File.join( File.dirname(__FILE__), "..", "..", "spec_helper" )
+require File.join( File.dirname(__FILE__), "..", "..", "..", "lib", "wistle.rb" )
 
 class MockSyncModel
   include DataMapper::Resource
@@ -12,12 +12,12 @@ class MockSyncModel
   
 end
 
-describe Wistle::SvnSync do
+describe Wistle::Svn::Sync do
   describe "#run" do
     before(:all) do
       MockSyncModel.auto_migrate!
-      load(File.join(File.dirname(__FILE__), "fixtures", "articles_comments.rb" ))
-      repos_path = File.join(File.dirname(__FILE__), "..", "..", "lib", "wistle", "tmp", "repo_articles_comments" )
+      load(File.join(File.dirname(__FILE__), "..", "fixtures", "articles_comments.rb" ))
+      repos_path = File.join(File.dirname(__FILE__), "..", "..", "..", "lib", "wistle", "tmp", "repo_articles_comments" )
       @repos_uri = "file://" + File.expand_path(repos_path) + "/articles"
     end
     
@@ -27,7 +27,7 @@ describe Wistle::SvnSync do
       @ws_model = Wistle::Model.create(:name => 'MockSyncModel', :revision => 0)
       @ws_model.config = Wistle::Config.new
       @ws_model.config.uri = @repos_uri
-      @sync = Wistle::SvnSync.new(@ws_model)
+      @sync = Wistle::Svn::Sync.new(@ws_model)
     end
     
     # This is a generic "it should just work" test
@@ -65,34 +65,5 @@ describe Wistle::SvnSync do
       @sync.run.should be_false
     end
   end
-  
-  describe "#short_path" do
-    before(:each) do
-      Wistle::Model.all.each { |m| m.destroy }
-      @ws_model = Wistle::Model.create(:name => 'MockSyncModel', :revision => 0)
-      @ws_model.config = Wistle::Config.new
-      @ws_model.config.extension = nil
-      @sync = Wistle::SvnSync.new(@ws_model)
-      @sync.instance_variable_set("@path_from_root", "/articles")
-    end
     
-    it "should remove 'leading path'" do
-      @sync.__send__(:short_path, "/articles/something").should == "something"
-    end
-    
-    it "should remove extension if configured" do
-      @ws_model.config.extension = 'txt'
-      @sync.__send__(:short_path, "/articles/something.txt").should == "something"
-    end
-
-    it "should not remove other extensions" do
-      @ws_model.config.extension = 'txt'
-      @sync.__send__(:short_path, "/articles/something.jpg").should == "something.jpg"
-    end
-
-    it "should not remove extension if not configured" do
-      @sync.__send__(:short_path, "/articles/something.txt").should == "something.txt"
-    end
-  end
-  
 end

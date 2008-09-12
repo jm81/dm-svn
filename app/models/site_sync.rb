@@ -1,10 +1,4 @@
-class SiteSync < Wistle::SvnSync
-  def initialize(model_row)
-    @model_row = model_row
-    @model = Article
-    @config = model_row
-  end
-  
+class Changeset < Wistle::Svn::Changeset
   # Get an Article by site and path.
   def get(path)
     Article.first(:site_id => @model_row.id, :svn_name => short_path(path))
@@ -12,6 +6,14 @@ class SiteSync < Wistle::SvnSync
   
   def new_record
     @model.create(:site_id => @model_row.id)
+  end
+end
+
+class SiteSync < Wistle::Svn::Sync
+  def initialize(model_row)
+    @model_row = model_row
+    @model = Article
+    @config = model_row
   end
   
   def run

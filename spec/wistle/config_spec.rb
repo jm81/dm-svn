@@ -25,7 +25,6 @@ describe Wistle::Config do
   
   it "should load config options from database.yml" do
     f = "#{Merb.root}/config/database.yml"
-    puts f
     yaml = File.read(File.dirname(__FILE__) + '/database.yml')
     IO.should_receive(:read).with(f).and_return(yaml)
  

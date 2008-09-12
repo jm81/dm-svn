@@ -98,8 +98,8 @@ describe Wistle::Svn do
     it "should run sync" do
       Wistle::Model.should_receive(:first).with(:name => 'MockArticle').
           and_return(@wistle_model)
-      sync = mock(Wistle::SvnSync)
-      Wistle::SvnSync.should_receive(:new).with(@wistle_model).and_return(sync)
+      sync = mock(Wistle::Svn::Sync)
+      Wistle::Svn::Sync.should_receive(:new).with(@wistle_model).and_return(sync)
       sync.should_receive(:run)
       MockArticle.sync
     end
