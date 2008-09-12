@@ -9,3 +9,8 @@ Spec::Runner.configure do |config|
   config.include(Merb::Test::RouteHelper)
   config.include(Merb::Test::ControllerHelper)
 end
+
+# for temporarily disabling one set of specs.
+def dont_describe(*args)
+  nil
+end
