@@ -180,4 +180,21 @@ describe Site do
     end
     
   end
+  
+    
+  describe "#articles.get" do
+    
+    it "should scope by Site" do
+      s1 = Site.create(:name => 'first')
+      a1 = s1.articles.create(:svn_name => 'path')
+      s2 = Site.create(:name => 'second')
+      a2 = s2.articles.create(:svn_name => 'path')
+      
+      Article.get('path').id.should == a1.id
+      s1.articles.get('path').id.should == a1.id
+      s2.articles.get('path').id.should == a2.id
+      s1.articles.get('no_path').should be_nil
+    end
+    
+  end
 end

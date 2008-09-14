@@ -47,7 +47,7 @@ class Site
   # A URI based off of contents_uri to use as the base for building URI's
   # for public and views
   def base_uri
-    ary = contents_uri.split("/")
+    ary = contents_uri.to_s.split("/")
     ary.pop if ary[-1].blank?
     ary.pop
     ary.join("/") + "/"
@@ -150,6 +150,24 @@ class Site
     tag = Tag.first(:name => tag)
     return 0 unless tag
     self.taggings.count(:tag_id => tag.id)
+  end
+  
+  alias_method :old_articles, :articles
+  
+  # Override articles, so I can override articles.get to first get by path if
+  # passed a string.
+  def articles(*args)
+    a = old_articles(*args)
+    
+    def a.get(path_or_id)
+      if path_or_id.is_a?(String)
+        first(:svn_name => path_or_id)
+      else
+        super
+      end
+    end
+    
+    a
   end
   
   class << self
