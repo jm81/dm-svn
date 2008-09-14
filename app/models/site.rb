@@ -1,5 +1,6 @@
 class Site
   include DataMapper::Resource
+  attr_accessor :path_from_root # Used by Sync.
   
   has n, :articles
   has n, :comments, :through => :articles
