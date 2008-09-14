@@ -11,6 +11,7 @@ class From_0_1
         a.svn_name = a.path
       end
       
+      a.save
     end
   end
 end
