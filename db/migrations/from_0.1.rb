@@ -1,7 +1,7 @@
 require 'dm-migrations'
 
 class From_0_1
-  def run
+  def self.run
     Article.property :path, String, :length => 255
       
     Article.repository.auto_upgrade!
