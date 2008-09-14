@@ -15,6 +15,13 @@ module Wistle
         klass.property :svn_updated_rev, String
         klass.property :svn_created_by, String
         klass.property :svn_updated_by, String
+        
+        # On create, set svn_created_* attrs based on svn_updated_* attrs
+        klass.before :create do
+          attribute_set(:svn_created_at, svn_updated_at)
+          attribute_set(:svn_created_rev, svn_updated_rev)
+          attribute_set(:svn_created_by, svn_updated_by)
+        end
       end
     end
     
@@ -68,6 +75,20 @@ module Wistle
       
       def sync
         Wistle::Svn::Sync.new(svn_repository).run
+      end
+      
+      # Override normal get behavior to try to get based on path if the argument
+      # is a String.
+      def get(path_or_id)
+        if path_or_id.is_a?(String)
+          get_by_path(path_or_id)
+        else
+          super
+        end
+      end
+      
+      def get_by_path(path)
+        first(:svn_name => path)
       end
     end
     

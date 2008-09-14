@@ -87,4 +87,57 @@ describe Wistle::Svn do
     end
     
   end
+  
+  describe ".get" do
+    it "should get instance by path" do
+      MockArticle.should_receive(:get_by_path).
+        with('path/to/name').
+        and_return(nil)
+      
+      MockArticle.get('path/to/name')
+    end
+    
+    it "should get instance by id" do
+      MockArticle.should_not_receive(:get_by_path)
+      MockArticle.should_receive(:first).and_return(nil)
+      MockArticle.get(1)
+    end
+  end
+  
+  describe ".get_by_path" do
+    it "should get an instance by path" do
+      MockArticle.should_receive(:first).
+        with(:svn_name => 'path/to/name').
+        and_return(nil)
+        
+      MockArticle.get_by_path('path/to/name')
+    end
+  end
+  
+  describe "hooks" do
+    it "should update svn_created_* properties before create" do
+      a = Article.new
+      
+      a.svn_updated_at = Time.parse("2008-08-10 05:00:00")
+      a.svn_updated_rev = 10
+      a.svn_updated_by = "jmorgan"
+      a.save
+      
+      at = a.svn_updated_at
+      
+      a.svn_created_at.should == at
+      a.svn_created_rev.should == 10.to_s
+      a.svn_created_by.should == "jmorgan"
+      
+      a.svn_updated_at = Time.parse("2008-08-12 05:00:00")
+      a.svn_updated_rev = 12
+      a.svn_updated_by = "someone_else"
+      a.save
+      
+      # should not have changed.
+      a.svn_created_at.should == at
+      a.svn_created_rev.should == 10.to_s
+      a.svn_created_by.should == "jmorgan"
+    end
+  end
 end
