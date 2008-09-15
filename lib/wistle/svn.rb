@@ -95,6 +95,6 @@ module Wistle
   end
 end
 
-%w{sync changeset}.each do |f|
+%w{sync changeset node}.each do |f|
   require File.dirname(__FILE__) + "/svn/#{f}.rb"
 end

@@ -27,3 +27,10 @@ class MockSyncModel
   property :body, Text, :body_property => true
   property :published_at, DateTime
 end
+
+# Load a fixture and return the repos uri.
+def load_svn_fixture(name)
+  require(File.join(File.dirname(__FILE__), "fixtures", "#{name}.rb" ))
+  repos_path = File.join(File.dirname(__FILE__), "..", "..", "lib", "wistle", "tmp", "repo_#{name}" )
+  return "file://" + File.expand_path(repos_path) + "/articles"
+end

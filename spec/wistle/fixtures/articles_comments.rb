@@ -11,6 +11,8 @@ svn_repo('articles_comments') do
   
   revision 2, 'Create articles about computers and philosophy' do
     dir 'articles' do
+      prop 'ws:title', 'Articles'
+      
       file 'philosophy.txt' do
         prop 'ws:title', 'Philosophy'
         prop 'ws:published_at', (Time.now - 2 * 24 * 3600) # 2.days.ago
@@ -73,9 +75,21 @@ svn_repo('articles_comments') do
     end
   end
   
-  revision 7, 'Delete computers.txt' do
+  revision 8, 'Delete computers.txt' do
     dir 'articles' do
       delete 'computers.txt'
+    end
+  end
+  
+  revision 9, 'Add nodes with YAML properties' do
+    dir 'articles' do
+      file 'meta.yml' do
+        body "title: Lots of Articles\nrandom_number: 7"
+      end
+      
+      file 'turtle.txt' do
+        body "---\ntitle: Turtle\nrandom_number: 2\n...\nHi, turtle."
+      end
     end
   end
 end

@@ -4,9 +4,7 @@ describe Wistle::Svn::Sync do
   describe "#run" do
     before(:all) do
       MockSyncModel.auto_migrate!
-      load(File.join(File.dirname(__FILE__), "..", "fixtures", "articles_comments.rb" ))
-      repos_path = File.join(File.dirname(__FILE__), "..", "..", "..", "lib", "wistle", "tmp", "repo_articles_comments" )
-      @repos_uri = "file://" + File.expand_path(repos_path) + "/articles"
+      @repos_uri = load_svn_fixture('articles_comments')
     end
     
     before(:each) do
@@ -21,7 +19,7 @@ describe Wistle::Svn::Sync do
     # This is a generic "it should just work" test
     it "should update database" do
       @sync.run
-      MockSyncModel.count.should == 3
+      MockSyncModel.count.should == 4
       
       comp = MockSyncModel.first(:svn_name => "computations")
       comp.body.should == 'Computers do not like salsa very much.'
@@ -45,7 +43,7 @@ describe Wistle::Svn::Sync do
     
     it "should update Wistle::Model entry" do
       @sync.run
-      @ws_model.revision.should == 8
+      @ws_model.revision.should == 9
     end
   
     it "should return false if already at the youngest revision" do
