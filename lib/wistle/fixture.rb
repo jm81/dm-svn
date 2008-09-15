@@ -141,7 +141,7 @@ module Wistle
       end
       
       def prop(name, value)
-        @repo.ctx.propset(name, Fixture::svn_time(value), @path)
+        @repo.ctx.propset(name, Fixture::svn_time(value), @path[0..-2])
       end
     end
     
