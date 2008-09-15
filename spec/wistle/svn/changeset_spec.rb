@@ -1,6 +1,6 @@
 require File.join( File.dirname(__FILE__), "..", "spec_helper" )
 
-describe Wistle::Svn::Sync do
+describe Wistle::Svn::Changeset do
   
   describe "#short_path" do
     before(:each) do

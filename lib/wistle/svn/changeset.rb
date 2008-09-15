@@ -8,7 +8,7 @@ module Wistle
     class Changeset
       include Comparable
       
-      attr_reader :changes, :revision, :date, :author
+      attr_reader :changes, :revision, :date, :author, :repos, :config
       
       def initialize(changes, revision, author, date, sync)
         @changes, @revision, @author, @date = changes, revision, author, date
@@ -20,7 +20,7 @@ module Wistle
         self.revision <=> other.revision
       end
       
-      # Process this changset.
+      # Process this changeset.
       # This doesn't account for possible move/replace conflicts (A node is moved,
       # then the old node is replaced by a new one). I assume those are rare
       # enough that I won't code around them, for now.
