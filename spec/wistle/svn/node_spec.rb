@@ -18,6 +18,10 @@ describe Wistle::Svn::Node do
     @file = Wistle::Svn::Node.new(@cs3, "/articles/unpublished.txt")
   end
   
+  it "should get short_path" do
+    @file.short_path.should == "unpublished"
+  end
+  
   it "should check if file" do
     @dir.file?.should be_false
     @file.file?.should be_true

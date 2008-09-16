@@ -13,6 +13,11 @@ module Wistle
         @changeset, @path = changeset, path
       end
       
+      # Shortened path (from Changeset#short_path)
+      def short_path
+        @changeset.short_path(@path)
+      end
+      
       # Body of the node (nil for a directory)
       def body
         return nil unless file?
