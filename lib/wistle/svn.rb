@@ -37,14 +37,26 @@ module Wistle
       @svn_name
     end
     
+    # Set the path. This may be responsible for moving the record to a different
+    # parent, etc.
+    def path=(value)
+      attribute_set(:svn_name, value)
+    end
+    
     # Update properties (body and other properties) from a Wistle::Svn::Node
     # or similar (expects #body as a String and #properties as a Hash).
     # This method calls #save.
     def update_from_svn(node)
       attribute_set(self.class.config.body_property, node.body)
+      self.path = node.short_path
       
       node.properties.each do | attr, value |
         attribute_set(attr, value)
+      end
+      
+      if !valid?
+        puts "Invalid #{node.short_path} at revision #{node.revision}"
+        puts " - " + errors.full_messages.join(".\n - ")
       end
       
       save

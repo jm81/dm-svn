@@ -31,21 +31,33 @@ describe Wistle::Svn do
     m.path.should == 'path/to/name'
   end
   
+  describe '#path=' do
+    before(:each) do
+      @article = MockArticle.new
+    end
+    
+    it "should set svn_name" do
+      @article.should_receive(:attribute_set).with(:svn_name, 'short/path')
+      @article.path = 'short/path'
+    end
+    
+  end
+  
   describe '#update_from_svn' do
     before(:each) do
       @node = mock(Wistle::Svn::Node)
       @article = MockArticle.new
     end
     
-    it 'should update body and other properties' do
-      @node.should_receive(:body).and_return('body')
-      
+    it 'should update path, body and other properties' do
+      @node.should_receive(:body).and_return('body')      
+      @node.should_receive(:short_path).and_return('short/path')
       @node.should_receive(:properties).and_return(
         {'title' => 'Title', 'svn_updated_by' => 'jmorgan'}
       )
       
+      @article.should_receive(:attribute_set).with(:svn_name, 'short/path')
       @article.should_receive(:attribute_set).with('contents', 'body')
-      
       @article.should_receive(:attribute_set).with('title', 'Title')
       @article.should_receive(:attribute_set).with('svn_updated_by', 'jmorgan')
       
