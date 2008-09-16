@@ -86,8 +86,6 @@ module Wistle
           record.save
         end      
       end
-    
-      private
       
       # Get the relative path from config.uri
       def short_path(path)
@@ -96,6 +94,8 @@ module Wistle
         path.sub!(/\.#{@config.extension}\Z/, '') if @config.extension
         path
       end
+
+      private
       
       # Get an object of the @model, by path.
       def get(path)
