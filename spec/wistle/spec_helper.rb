@@ -26,6 +26,7 @@ class MockSyncModel
   property :title, String
   property :body, Text, :body_property => true
   property :published_at, DateTime
+  property :random_number, Integer # because some tests need a non-datetime prop
 end
 
 # Load a fixture and return the repos uri.

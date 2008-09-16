@@ -46,7 +46,10 @@ module Wistle
             # Change the path. No need to perform other updates, as this is an
             # "A" or "R" and thus is in the +modified+ Array.
             record = get(del)
-            record.update_attributes(:svn_name => short_path(copy[0])) if record
+            if record
+              record.path = short_path(copy[0])
+              record.save
+            end
           end
         end
         
@@ -61,32 +64,13 @@ module Wistle
           next if @config.extension && path !~ /\.#{@config.extension}\Z/
           
           record = get(path) || new_record
-          svn_file = @repos.file(path, revision)
-          
-          # update body
-          record.__send__("#{@config.body_property}=", svn_file[0])
   
-          # update node props -- just find any props with property_prefix
-          svn_file[1].each do |name, val|
-            if name =~ /\A#{@config.property_prefix}(.*)/
-              record.__send__("#{$1}=", val)
-            end
-          end
-  
-          # update revision props
-          record.svn_name = short_path(path)
-          record.svn_updated_at = date
-          record.svn_updated_rev = revision
-          record.svn_updated_by = author
-          
-          if !record.valid?
-            puts "Invalid #{short_path(path)} at revision #{revision}"
-            puts " - " + record.errors.full_messages.join(".\n - ")
-          end
-          record.save
+          # update record
+          node = Node.new(self, path)
+          record.update_from_svn(node)
         end      
       end
-      
+    
       # Get the relative path from config.uri
       def short_path(path)
         path = path[@config.path_from_root.length..-1].to_s
@@ -94,7 +78,7 @@ module Wistle
         path.sub!(/\.#{@config.extension}\Z/, '') if @config.extension
         path
       end
-
+    
       private
       
       # Get an object of the @model, by path.
@@ -110,4 +94,3 @@ module Wistle
     end
   end
 end
-   
