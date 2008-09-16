@@ -43,6 +43,12 @@ module Wistle
       attribute_set(:svn_name, value)
     end
     
+    # Move to a different path and save
+    def move_to(new_path)
+      self.path = new_path
+      self.save
+    end
+    
     # Update properties (body and other properties) from a Wistle::Svn::Node
     # or similar (expects #body as a String and #properties as a Hash).
     # This method calls #save.

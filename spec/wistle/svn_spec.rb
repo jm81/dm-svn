@@ -1,6 +1,10 @@
 require File.join( File.dirname(__FILE__), "spec_helper" )
 
 describe Wistle::Svn do
+  before(:each) do
+    @article = MockArticle.new
+  end
+  
   it "should add svn_* properties" do
     fields = %w{name created_at updated_at created_rev updated_rev created_by updated_by}
     fields.each do | field |
@@ -32,21 +36,15 @@ describe Wistle::Svn do
   end
   
   describe '#path=' do
-    before(:each) do
-      @article = MockArticle.new
-    end
-    
     it "should set svn_name" do
       @article.should_receive(:attribute_set).with(:svn_name, 'short/path')
       @article.path = 'short/path'
     end
-    
   end
   
   describe '#update_from_svn' do
     before(:each) do
       @node = mock(Wistle::Svn::Node)
-      @article = MockArticle.new
     end
     
     it 'should update path, body and other properties' do
@@ -65,7 +63,15 @@ describe Wistle::Svn do
       @article.update_from_svn(@node)
     end
 
-  end  
+  end
+  
+  describe "#move_to" do
+    it 'should update the path and save' do
+      @article.should_receive(:path=).with('new/path')
+      @article.should_receive(:save)
+      @article.move_to('new/path')
+    end
+  end
   
   describe ".svn_repository" do
     before(:each) do

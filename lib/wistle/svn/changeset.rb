@@ -46,10 +46,7 @@ module Wistle
             # Change the path. No need to perform other updates, as this is an
             # "A" or "R" and thus is in the +modified+ Array.
             record = get(del)
-            if record
-              record.path = short_path(copy[0])
-              record.save
-            end
+            record.move_to(short_path(copy[0])) if record
           end
         end
         
