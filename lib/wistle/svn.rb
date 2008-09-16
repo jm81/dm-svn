@@ -37,6 +37,19 @@ module Wistle
       @svn_name
     end
     
+    # Update properties (body and other properties) from a Wistle::Svn::Node
+    # or similar (expects #body as a String and #properties as a Hash).
+    # This method calls #save.
+    def update_from_svn(node)
+      attribute_set(self.class.config.body_property, node.body)
+      
+      node.properties.each do | attr, value |
+        attribute_set(attr, value)
+      end
+      
+      save
+    end
+    
     module ClassMethods
       def config
         @config ||= Config.new

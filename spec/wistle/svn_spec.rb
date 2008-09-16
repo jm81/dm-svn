@@ -31,6 +31,30 @@ describe Wistle::Svn do
     m.path.should == 'path/to/name'
   end
   
+  describe '#update_from_svn' do
+    before(:each) do
+      @node = mock(Wistle::Svn::Node)
+      @article = MockArticle.new
+    end
+    
+    it 'should update body and other properties' do
+      @node.should_receive(:body).and_return('body')
+      
+      @node.should_receive(:properties).and_return(
+        {'title' => 'Title', 'svn_updated_by' => 'jmorgan'}
+      )
+      
+      @article.should_receive(:attribute_set).with('contents', 'body')
+      
+      @article.should_receive(:attribute_set).with('title', 'Title')
+      @article.should_receive(:attribute_set).with('svn_updated_by', 'jmorgan')
+      
+      @article.should_receive(:save)
+      @article.update_from_svn(@node)
+    end
+
+  end  
+  
   describe ".svn_repository" do
     before(:each) do
       @wistle_model = mock(Wistle::Model)
