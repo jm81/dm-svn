@@ -80,7 +80,7 @@ module Wistle
       
       # Get an object of the @model, by path.
       def get(path)
-        @model.first(:svn_name => short_path(path))
+        @model.get(short_path(path))
       end
       
       # Create a new object of the @model
