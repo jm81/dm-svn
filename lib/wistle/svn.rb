@@ -118,6 +118,17 @@ module Wistle
         end
       end
       
+      # Try to get by path. If not, create a new record and so set its path.
+      def get_or_create(path)
+        i = get_by_path(path)
+        return i if i
+        
+        i = create
+        i.path = path
+        i.save
+        return i
+      end
+      
       def get_by_path(path)
         first(:svn_name => path)
       end

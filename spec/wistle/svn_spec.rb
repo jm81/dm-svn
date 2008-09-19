@@ -1,6 +1,10 @@
 require File.join( File.dirname(__FILE__), "spec_helper" )
 
 describe Wistle::Svn do
+  before(:all) do
+    MockArticle.auto_migrate!
+  end
+  
   before(:each) do
     @article = MockArticle.new
   end
@@ -143,6 +147,28 @@ describe Wistle::Svn do
       MockArticle.should_not_receive(:get_by_path)
       MockArticle.should_receive(:first).and_return(nil)
       MockArticle.get(1)
+    end
+  end
+  
+  describe ".get_or_create" do
+    it "should get an existing instance by path" do
+      MockArticle.should_receive(:get_by_path).
+        with('path/to/name').
+        and_return(1)
+      
+      MockArticle.get_or_create('path/to/name').should == 1
+    end
+    
+    it "should create a new instance, setting path" do
+      MockArticle.should_receive(:get_by_path).
+        with('path/to/name').
+        and_return(nil)
+      
+      m = MockArticle.new
+      MockArticle.should_receive(:create).and_return(m)
+      
+      MockArticle.get_or_create('path/to/name')
+      m.path.should == 'path/to/name'
     end
   end
   
