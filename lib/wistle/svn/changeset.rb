@@ -25,6 +25,8 @@ module Wistle
       # then the old node is replaced by a new one). I assume those are rare
       # enough that I won't code around them, for now.
       def process
+        return if changes.nil?
+        
         modified, deleted, copied = [], [], []
         
         changes.each_pair do |path, change|
@@ -57,13 +59,24 @@ module Wistle
         end
         
         # Perform modifies and adds
-        modified.each do |path|
-          next if @config.extension && path !~ /\.#{@config.extension}\Z/
+        modified.each do |path|          
+          node = Node.new(self, path)
           
-          record = get(path) || new_record
+          if @config.extension && 
+              node.file? &&
+              path !~ /\.#{@config.extension}\Z/ 
+            if path =~ /\.yml\Z/ && @model.svn_category_model
+              # Update parent directory, if applicable
+              path = path.split("/")[0..-2].join("/")
+              node = Node.new(self, path)
+            else
+              next
+            end
+          end
+          
+          record = get(path) || new_record(node)
   
           # update record
-          node = Node.new(self, path)
           record.update_from_svn(node)
         end      
       end
@@ -80,12 +93,14 @@ module Wistle
       
       # Get an object of the @model, by path.
       def get(path)
-        @model.get(short_path(path))
+        @model.get(short_path(path), true)
       end
       
       # Create a new object of the @model
-      def new_record
-        @model.new
+      def new_record(node)
+        node.file? ?
+          @model.new :
+          Object.const_get(@model.svn_category_model).new
       end
       
     end

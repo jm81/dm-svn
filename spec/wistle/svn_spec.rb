@@ -52,7 +52,7 @@ describe Wistle::Svn do
     end
     
     it 'should update path, body and other properties' do
-      @node.should_receive(:body).and_return('body')      
+      @node.should_receive(:body).twice.and_return('body')      
       @node.should_receive(:short_path).and_return('short/path')
       @node.should_receive(:properties).and_return(
         {'title' => 'Title', 'svn_updated_by' => 'jmorgan'}

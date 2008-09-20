@@ -53,7 +53,7 @@ module Wistle
     # or similar (expects #body as a String and #properties as a Hash).
     # This method calls #save.
     def update_from_svn(node)
-      attribute_set(self.class.config.body_property, node.body)
+      attribute_set(self.class.config.body_property, node.body) if node.body
       self.path = node.short_path
       
       node.properties.each do | attr, value |
@@ -109,8 +109,8 @@ module Wistle
       end
       
       # Override normal get behavior to try to get based on path if the argument
-      # is a String.
-      def get(path_or_id)
+      # is a String. Extra args are ignored by default.
+      def get(path_or_id, *args)
         if path_or_id.is_a?(String)
           get_by_path(path_or_id)
         else
@@ -137,6 +137,6 @@ module Wistle
   end
 end
 
-%w{sync changeset node}.each do |f|
+%w{sync changeset node categorized}.each do |f|
   require File.dirname(__FILE__) + "/svn/#{f}.rb"
 end

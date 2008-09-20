@@ -29,6 +29,29 @@ class MockSyncModel
   property :random_number, Integer # because some tests need a non-datetime prop
 end
 
+class MockCategory
+  include DataMapper::Resource
+  include Wistle::Svn
+  has n, :mock_categorized_articles
+  
+  property :id, Integer, :serial => true
+  property :title, String
+  property :random_number, Integer
+end
+
+class MockCategorizedArticle
+  include DataMapper::Resource
+  include Wistle::Svn
+  belongs_to :mock_category, :wistle => true
+  
+  property :id, Integer, :serial => true
+  property :title, String
+  property :article, String
+  property :body, Text, :body_property => true
+  property :published_at, DateTime
+  property :random_number, Integer # because some tests need a non-datetime prop
+end
+
 # Load a fixture and return the repos uri.
 def load_svn_fixture(name)
   require(File.join(File.dirname(__FILE__), "fixtures", "#{name}.rb" ))
