@@ -14,3 +14,17 @@ end
 def dont_describe(*args)
   nil
 end
+
+# auto_migrate one or more models
+def migrate(*klasses)
+  klasses.each do |klass|
+    klass.auto_migrate!
+  end
+end
+
+# Delete all entries in one or more models
+def clean(*klasses)
+  klasses.each do |klass|
+    klass.all.each {|entry| entry.destroy}
+  end
+end
