@@ -9,5 +9,3 @@
 %ul.comments
   - @article.direct_comments.each do |comment|
     = partial 'comments/show', :comment => comment
-
-= link_to('Back', url(:articles))
