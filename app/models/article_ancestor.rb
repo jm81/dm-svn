@@ -29,7 +29,14 @@ module ArticleAncestor
     
     # Surely, there is a better way..
     all = self.descendant_articles(options)
-    all.sort{|a, b| b.published_at <=> a.published_at}
+    sorted = all.sort{|a, b| b.published_at <=> a.published_at}
+    
+    sorted.instance_variable_set(:@pages, all.pages)
+    sorted.instance_variable_set(:@current_page, all.current_page)
+    def sorted.pages; @pages; end
+    def sorted.current_page; @current_page; end  
+    
+    sorted
   end
   
   
