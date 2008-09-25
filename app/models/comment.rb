@@ -13,17 +13,17 @@ class Comment
       :child_key => [:parent_id],
       :order => [:created_at.asc]
 
-    property :id, Integer, :serial => true
-    property :author, String, :nullable => false, :length => 100
-    property :email, String, :format => :email_address
-    property :html, Text, :lazy => false
-    property :body, Text, :nullable => false,
-             :filter => {:to => :html, :with => :filters, :default => :site}
-    property :article_id, Integer, :nullable => false
-    property :stored_article_path, Text
-    property :parent_id, Integer
-    property :created_at, DateTime
-    property :updated_at, DateTime
+  property :id, Integer, :serial => true
+  property :author, String, :nullable => false, :length => 100
+  property :email, String, :format => :email_address
+  property :html, Text, :lazy => false
+  property :body, Text, :nullable => false,
+           :filter => {:to => :html, :with => :filters, :default => :site}
+  property :site_id, Integer
+  property :stored_article_path, Text
+  property :parent_id, Integer
+  property :created_at, DateTime
+  property :updated_at, DateTime
   
   def email=(val)
     if val.blank?
@@ -38,14 +38,17 @@ class Comment
   end
   
   def store_article_path
-    update_attributes(:stored_article_path => self.article.path)
+    update_attributes({
+      :stored_article_path => self.article.path,
+      :site_id => self.article.site.id
+    })
   end
   
   def reassociate_to_article
     self.reload # Ensure we have the latest path from database.
     
-    site.articles.each do |a|
-      if a.path == @stored_article_path
+    Site.get(@site_id).articles.each do |a|
+      if a.path == self.stored_article_path
         self.article_id = a.id
         self.save
         return true

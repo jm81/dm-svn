@@ -2,7 +2,7 @@ class Sitemap < Application
   provides :xml
   
   def index
-    @articles = @site.published_by_category
+    @articles = @site.published_articles
     @categories = @site.categories
     @tags = @site.tags
     @site_updated_at = @site.articles.max(:updated_at)

@@ -43,11 +43,15 @@ describe Wistle::Svn::Sync do
     
     it "should update Wistle::Model entry" do
       @sync.run
-      @ws_model.revision.should == 9
+      Wistle::Model.get(@ws_model.id).revision.should == 9
     end
   
     it "should return false if already at the youngest revision" do
       @sync.run.should be_true
+      @ws_model = Wistle::Model.get(@ws_model.id)
+      @ws_model.config = Wistle::Config.new
+      @ws_model.config.uri = @repos_uri
+      @sync = Wistle::Svn::Sync.new(@ws_model)
       @sync.run.should be_false
     end
   end
@@ -69,8 +73,7 @@ describe Wistle::Svn::Sync do
       @sync = Wistle::Svn::Sync.new(@ws_model)
     end
     
-    # TODO Fix for categories!!! This is a generic "it should just work" test
-    it "should update database" do
+    it "should update database, when categorized" do
       @sync.run
       
       MockCategory.count.should == 2

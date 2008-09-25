@@ -3,26 +3,19 @@ require File.join( File.dirname(__FILE__), "..", "spec_helper" )
 describe Comment do
 
   before(:each) do
-    Site.all.each { |s| s.destroy }
-    Article.all.each { |a| a.destroy }
-    Comment.all.each { |c| c.destroy }
-    @comment = Comment.new
-    @comment.author = "Jane Doe"
-    @comment.body = "This post was foolish"
-    @site = Site.create(:name => 'site')
-    @article_path = "path/to/article"
-    @article = Article.create(:site_id => @site.id, :svn_name => @article_path)
-    @comment.article_id = @article.id
+    clean Site, Category, Article, Comment
+    @article = setup_article
+    @article.path = "category/article"
+    @comment = @article.comments.create({
+        :author => 'Jane Doe', :body => 'My comments'})
   end
   
   def comment(parent_id = nil)
-    c = Comment.new
-    c.author = "Author"
-    c.body = "A comment on Comment #{parent_id}"
-    c.parent_id = parent_id
-    c.article_id = @article.id
-    c.save
-    return c
+    @article.comments.create({
+      :author => 'Author',
+      :body => "A comment on Comment #{parent_id}",
+      :parent_id => parent_id
+    })
   end
   
   it "should be valid" do
@@ -103,10 +96,13 @@ describe Comment do
     @comment.stored_article_path.should be_nil
     @comment.store_article_path
     @comment.stored_article_path.should == @article_path
+    @comment.site_id.should == @article.site.id
   end
   
   it 'should reassociate to an article' do
-    new_article = Article.create(:site_id => @site.id, :svn_name => 'path/to/second')
+    new_article = setup_article(@article.site)
+    new_article.update_attributes(:svn_name => 'path/to/second')
+    @comment.site_id = @article.site.id
     @comment.stored_article_path = @article_path
     @comment.save
     @comment.article = new_article

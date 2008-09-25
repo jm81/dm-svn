@@ -4,9 +4,19 @@ class Article
   include Filters::Resource
   extend Pagination
   
-  # Setup Wistle::Config info here or in database.yml
+  belongs_to :category, :wistle => true
+  include SvnExtensions
   
-  belongs_to :site
+  attr_accessor :tmp_site # Used by Sync
+  
+  # Get site through category
+  def site
+    # Something to do with when things are processed means this method
+    # makes filters happy instead of doing a self.category.site
+    @tmp_site ||
+      Category.get(@category_id).site
+  end
+  
   has n, :comments
  
   has n, :direct_comments,
@@ -18,7 +28,7 @@ class Article
   has n, :tags, :through => :taggings, :links => [:tagging]
 
   property :id, Integer, :serial => true
-  property :site_id, Integer
+  property :category_id, Integer
   property :title, String, :length => 255
   property :html, Text, :lazy => false
   property :body, Text,
@@ -28,9 +38,6 @@ class Article
   property :comments_allowed_at, DateTime
   property :created_at, DateTime
   property :updated_at, DateTime
-  
-  property :category, String
-  before :save, :update_category
   
   # Set boolean from timestamp methods:
   # - {name}?
@@ -47,11 +54,17 @@ class Article
       __send__("#{col}_at") ? true : false
     end
   end
+  
+  # Checks both that published_at has been set, and is not in the future.
+  def published?
+    (published_at && published_at <= DateTime.now) ? true : false
+  end
     
   # Sets tags.
   # Accepts a semi-colon delimited list (or an Array)
   # Existing taggings are deleted.
   def tags=(t)
+    self.save if self.new_record?
     self.taggings.each {|tagging| tagging.destroy}
     self.taggings.reload
     t = t.split(';') unless t.is_a?(Array)
@@ -59,26 +72,6 @@ class Article
       name = name.strip
       tag = Tag.first(:name => name) || Tag.create(:name => name)
       self.taggings.create(:tag => tag)
-    end
-  end
-  
-  def update_category
-    if attribute_dirty?(:category) || @category.nil?
-      attribute_set(:category, @svn_name.split('/')[0]) if @svn_name
-    end
-  end
-  
-  # The path from the svn root for the model. For the moment, just an alias
-  # of +svn_name+.
-  def path
-    @svn_name
-  end
-  
-  class << self
-    def published(options = {})
-      Article.all(options.merge(
-          :conditions => ["datetime(published_at) <= datetime('now')"],
-          :order => [:published_at.desc]))
     end
   end
 end

@@ -21,11 +21,10 @@ class Comments < Application
   def create
     @comment = Comment.new(params[:comment])
     @article.comments << @comment
+    p @parent
     @parent.replies << @comment if @parent
     if @comment.save
-      redirect url(:article_comment,
-          :article_id => @article.id,
-          :comment_id => @comment.id)
+      redirect comment_url(@comment)
     else
       render :new
     end
@@ -34,7 +33,7 @@ class Comments < Application
   protected
   
   def assign_article_and_parent
-    @article = Article.get(params[:article_id])
+    @article = @site.articles.get(params[:path])
     raise NotFound unless @article
     @parent = Comment.get(params[:parent_id]) unless params[:parent_id].blank?
   end

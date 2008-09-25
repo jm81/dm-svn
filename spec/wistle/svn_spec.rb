@@ -60,8 +60,8 @@ describe Wistle::Svn do
       
       @article.should_receive(:attribute_set).with(:svn_name, 'short/path')
       @article.should_receive(:attribute_set).with('contents', 'body')
-      @article.should_receive(:attribute_set).with('title', 'Title')
-      @article.should_receive(:attribute_set).with('svn_updated_by', 'jmorgan')
+      @article.should_receive(:attribute_set).with(:title, 'Title')
+      @article.should_receive(:attribute_set).with(:svn_updated_by, 'jmorgan')
       
       @article.should_receive(:save)
       @article.update_from_svn(@node)

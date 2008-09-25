@@ -2,7 +2,7 @@
 
 = error_messages_for :comment
 
-- form_for(@comment, :action => url(:article_comments, :article_id => @article.id)) do |f|
+- form_for(@comment, :action => comments_url(@article)) do |f|
   %input{:type => 'hidden', :name => 'parent_id', :value => params[:parent_id]}
   %p= text_control :author, :label => 'Your name:'
   %p= text_control :email,  :label => 'Your email:'

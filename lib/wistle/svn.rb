@@ -57,7 +57,9 @@ module Wistle
       self.path = node.short_path
       
       node.properties.each do | attr, value |
-        attribute_set(attr, value)
+        if self.respond_to?("#{attr}=")
+          self.__send__("#{attr}=", value)
+        end
       end
       
       if !valid?

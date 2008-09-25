@@ -7,7 +7,7 @@ xml.urlset "xmlns" => "http://www.sitemaps.org/schemas/sitemap/0.9" do
     xml.lastmod @site_updated_at.strftime("%Y-%m-%d")
   end
     
-  @articles.all.each do |article|
+  @articles.each do |article|
     xml.url do
       xml.loc(@domain + article.path)
       xml.priority 0.8
@@ -18,7 +18,7 @@ xml.urlset "xmlns" => "http://www.sitemaps.org/schemas/sitemap/0.9" do
   
   @categories.each do |category|
     xml.url do
-      xml.loc(@domain + "categories/" + category)
+      xml.loc(@domain + category.path)
       xml.priority 0.3
       xml.changefreq 'monthly'
     end

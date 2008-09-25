@@ -1,13 +1,36 @@
 require File.join( File.dirname(__FILE__), "..", "spec_helper" )
 
 describe Site do
+  before(:all) do
+    migrate Site, Category, Article
+  end
+  
   before(:each) do
-    Site.all.each {|s| s.destroy}
-    @site = Site.new(:name => "sample")
+    clean Site, Category, Article
+    
+    @site = Site.create(:name => "sample")
+    @category = @site.categories.create(:name => "First")
+    @site.categories.create(:name => "Second")
+    @site.categories.create(:name => "Third", :parent_id => @category.id)
+  end
+  
+  it "should have many Categories" do
+    @site.categories.should be_kind_of(DataMapper::Associations::OneToMany::Proxy)
+    @site.categories.should have(3).members
+    @category.site.should == @site
+  end
+  
+  it "should distinguish top-level Categories" do
+    @site.categories.should be_kind_of(DataMapper::Associations::OneToMany::Proxy)
+    @site.top_level_categories.should have(2).members
   end
   
   it "should have many Articles" do
+    a = @category.articles.create(:title => "Title", :body => "Contents")
+    a.category.should == @category
+    a.site.should == @site
     @site.articles.should be_kind_of(DataMapper::Associations::OneToMany::Proxy)
+    @site.articles.should have(1).member
   end
   
   it "should alias contents_uri as uri" do
@@ -37,7 +60,7 @@ describe Site do
     end
   end
   
-  describe ".find_domain" do
+  describe ".by_domain" do
     before(:each) do
       Site.all.each {|s| s.destroy}
       Site.create(:name => "subdomain", :domain_regex => 'www\.example\.com')
@@ -70,8 +93,11 @@ describe Site do
   end
   
   it "should have many tags" do
-    @site.save
-    Article.create(:site_id => @site.id).tags = "Chicken; Soup"
+    @category.articles.create.tags = "Chicken; Soup"
+    @site.tags.count.should == 2
+    
+    other = setup_article
+    other.tags = "Other; Chicken"
     @site.tags.count.should == 2
   end
   
@@ -80,26 +106,31 @@ describe Site do
       @soup_site  = Site.create(:name => "soup", :domain_regex => '1\.com')
       @chili_site = Site.create(:name => "chili", :domain_regex => '2\.com')
       
-      a = Article.create(:site_id => @soup_site.id)
+      a = setup_article(@soup_site, :published_at => (Time.now - 3600))
       a.tags = "Chicken"
       a.save
-      a = Article.create(:site_id => @soup_site.id)
+      a = setup_article(@soup_site, :published_at => (Time.now - 3600))
       a.tags = "Chicken; Soup"
       a.save
       
-      @soup  = Article.create(:site_id => @soup_site.id)
+      @soup  = setup_article(@soup_site, :published_at => (Time.now - 3600))
       @soup.tags = "Tomato"
       @soup.save
       
-      @chili = Article.create(:site_id => @chili_site.id)
+      @chili = setup_article(@chili_site, :published_at => (Time.now - 3600))
       @chili.tags = "Tomato"
       @chili.save
     end
 
     it "should get articles_tagged" do
       @soup_site.articles_tagged("Chicken").length.should == 2
-      @soup_site.articles_tagged("Tomato")[0].id.should == @soup.id
-      @chili_site.articles_tagged("Tomato")[0].id.should == @chili.id
+      @soup_site.articles_tagged("Tomato").should == [@soup]
+      @chili_site.articles_tagged("Tomato").should == [@chili]
+    end
+    
+    it "should not get unpublished articles" do
+      @soup.update_attributes(:published_at => (Time.now + 3600))
+      @soup_site.articles_tagged("Tomato").length.should == 0
     end
   
     it "should count_articles_tagged" do
@@ -110,37 +141,14 @@ describe Site do
     end
   end
   
-  describe 'categories' do
-    def article(path)
-      Article.create(:svn_name => path, :site_id => @site.id, :published_at => Time.now - 3600)
-    end
-  
-    before(:each) do
-      @site.save
-      Article.all.each { |a| a.destroy }
-      article('general/first')
-      article('general/second')
-      article('general/subfolder/another')
-      article('computing/first')
-      Article.create(:svn_name => 'general/othersite', :site_id => @site.id + 1)
-      Article.create(:svn_name => 'different/othersite', :site_id => @site.id + 1)
-    end
-    
-    it "should returns categories Array" do
-      @site.categories.should == ['computing', 'general']
-    end
-    
-    it "should find published Articles by category" do
-      articles = @site.published_by_category('general')
-      articles.length.should == 3
-      articles = @site.published_by_category(nil)
-      articles.length.should == 4
-    end
-  end
-  
   describe 'comments methods' do
     def article(path)
-      Article.create(:svn_name => path, :site_id => @site.id, :published_at => Time.now - 3600)
+      c = setup_category(@site)
+      c.path = "cat"
+      c.save
+      a = setup_article(c)
+      a.update_attributes(:svn_name => path, :published_at => Time.now - 3600)
+      a
     end
     
     def comment(article_id)
@@ -155,9 +163,8 @@ describe Site do
     
     before(:each) do
       @site.save
-      Article.all.each { |a| a.destroy }
-      Comment.all.each { |c| c.destroy }
-      @articles = [article('path/first'), article('path/second')]
+      clean Article, Comment
+      @articles = [article('first'), article('second')]
       @comments = [comment(@articles[0]), comment(@articles[1]), comment(@articles[0]), comment(@articles[1])]
     end
   
@@ -171,10 +178,10 @@ describe Site do
     
     it 'should reassociate all comments' do
       @site.store_article_paths
-      @site.reassociate_comments.should be(true)
+      c = @site.reassociate_comments.should be(true)
       
       @comments.each do |c|
-        c.update_attributes(:stored_article_path => 'not/a/path')
+        c.update_attributes(:stored_article_path => 'cat/no_path')
       end
       @site.reassociate_comments.length.should == 4
     end
@@ -185,16 +192,116 @@ describe Site do
   describe "#articles.get" do
     
     it "should scope by Site" do
+      clean Site, Article
       s1 = Site.create(:name => 'first')
-      a1 = s1.articles.create(:svn_name => 'path')
+      a1 = setup_article(s1, :svn_name => 'path')
       s2 = Site.create(:name => 'second')
-      a2 = s2.articles.create(:svn_name => 'path')
+      a2 = setup_article(s2, :svn_name => 'path')
       
-      Article.get('path').id.should == a1.id
-      s1.articles.get('path').id.should == a1.id
-      s2.articles.get('path').id.should == a2.id
-      s1.articles.get('no_path').should be_nil
+      a1.category.update_attributes(:svn_name => "cat")
+      a2.category.update_attributes(:svn_name => "cat")
+      
+      Article.get(s1, 'cat/path').id.should == a1.id
+      s1.articles.get('cat/path').id.should == a1.id
+      s2.articles.get('cat/path').id.should == a2.id
+      s1.articles.get('cat/no_path').should be_nil
     end
     
   end
+  
+  describe "#articles.get_published" do
+    before(:each) do
+      clean Site, Article
+    end
+    
+    it "should scope by Site" do
+      s1 = Site.create(:name => 'first')
+      a1 = setup_article(s1, :svn_name => 'path', :published_at => (Time.now - 3600))
+      s2 = Site.create(:name => 'second')
+      a2 = setup_article(s2, :svn_name => 'path', :published_at => (Time.now - 3600))
+      
+      a1.category.update_attributes(:svn_name => "cat")
+      a2.category.update_attributes(:svn_name => "cat")
+      
+      Article.get(s1, 'cat/path').should == a1
+      s1.articles.get_published('cat/path').should == a1
+      s2.articles.get_published('cat/path').should == a2
+      s1.articles.get_published('cat/no_path').should be_nil
+    end
+    
+    it "should only get published" do
+      s1 = Site.create(:name => 'first')
+      a1 = setup_article(s1, :svn_name => 'path', :published_at => (Time.now - 3600))
+      a1.category.update_attributes(:svn_name => "cat")
+      s1.articles.get_published('cat/path').id.should == a1.id
+      
+      # unpublished
+      a1.update_attributes(:published_at => nil)
+      s1.articles.get_published('cat/path').should be_nil
+      
+      # published in the future
+      a1.update_attributes(:published_at => (Time.now + 3600))
+      s1.articles.get_published('cat/path').should be_nil
+    end
+    
+  end
+  
+  describe "#published_articles" do
+    before(:each) do
+      @prose  = setup_category(@site, :svn_name => 'prose')
+      @poetry = setup_category(@site, :svn_name => 'poetry', :name => 'Poems')
+      @stories = setup_category(@site, :svn_name => 'stories', :name => 'Stories')
+      @essays  = setup_category(@site, :svn_name => 'essays', :name => 'Essays')
+      @stories.parent = @prose; @stories.save
+      @essays.parent  = @prose; @essays.save
+      
+      @red = setup_article(@stories, :svn_name => 'red-riding-hood', :published_at => (Time.now - 3600))
+      @grindle = setup_article(@stories, :svn_name => 'grindle', :published_at => (Time.now + 3600))
+      @beowulf = setup_article(@stories, :svn_name => 'beowulf')
+      
+      @politics = setup_article(@essays, :svn_name => "politics", :published_at => (Time.now - 2800))
+    end
+    
+    it "should get published articles" do
+      @site.published_articles.should == [@politics, @red]
+    end
+    
+    it "should scope by site" do
+      new_article = setup_article(nil, :svn_name => 'red-riding-hood', :published_at => (Time.now - 3600))
+      new_article.category.update_attributes(:svn_name => 'cat')
+      @site.published_articles.should == [@politics, @red]
+      new_article.site.published_articles.should == [new_article]
+    end
+    
+    it "should get all for a year" do
+      @green  = setup_article(@stories, :svn_name => 'green-riding-hood', :published_at => '1999-08-10')
+      @yellow = setup_article(@stories, :svn_name => 'yellow-riding-hood', :published_at => '1999-06-10')
+      @blue   = setup_article(@stories, :svn_name => 'red-riding-hood', :published_at => '1998-08-10')
+      
+      @site.published_articles(:year => 1999).should == [@green, @yellow]
+      @site.published_articles(:year => 1998).should == [@blue]
+      @site.published_articles(:year => 1997).should == []
+    end
+    
+    it "should get all for a month" do
+      @green  = setup_article(@stories, :svn_name => 'green-riding-hood', :published_at => '1999-08-10')
+      @yellow = setup_article(@stories, :svn_name => 'yellow-riding-hood', :published_at => '1999-08-05')
+      @blue   = setup_article(@stories, :svn_name => 'red-riding-hood', :published_at => '1999-07-10')
+      
+      @site.published_articles(:year => 1999, :month => 8).should == [@green, @yellow]
+      @site.published_articles(:year => 1999, :month => 7).should == [@blue]
+      @site.published_articles(:year => 1999, :month => 6).should == []
+    end
+    
+    it "should get all for a day" do
+      @green  = setup_article(@stories, :svn_name => 'green-riding-hood', :published_at => '1999-08-10')
+      @yellow = setup_article(@stories, :svn_name => 'yellow-riding-hood', :published_at => '1999-08-10')
+      @blue   = setup_article(@stories, :svn_name => 'red-riding-hood', :published_at => '1999-08-05')
+      
+      @site.published_articles(:year => 1999, :month => 8, :day => 10).should == [@green, @yellow]
+      @site.published_articles(:year => 1999, :month => 8, :day => 5).should == [@blue]
+      @site.published_articles(:year => 1999, :month => 8, :day => 15).should == []
+    end
+  end
+
 end

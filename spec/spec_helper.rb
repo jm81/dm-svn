@@ -28,3 +28,44 @@ def clean(*klasses)
     klass.all.each {|entry| entry.destroy}
   end
 end
+
+# These setup_* methods are designed to quickly setup a chain of relationships,]
+# when I only particularly care about the end of the chain. Site -> Category ->
+# Article -> Comment
+def setup_site(attrs = {})
+  Site.create(attrs.merge(:name => "Test Site #{Site.count}"))
+end
+
+def setup_category(site = nil, attrs = {})
+  site = setup_site unless site.kind_of?(Site)
+  site.categories.create({:name => "Test Category"}.merge(attrs))
+end
+
+def setup_article(category = nil, attrs = {})
+  if category.kind_of?(Site)
+    category = setup_category(category)
+  elsif !category.kind_of?(Category)
+    category = setup_category
+  end
+  
+  category.articles.create(
+      {:title => "Test Article", :body => "A test"}.merge(attrs))
+end
+
+def setup_comment(article = nil, attrs = {})
+  if article.kind_of?(Site) || article.kind_of?(Category)
+    article = setup_article(article)
+  elsif !article.kind_of?(Article)
+    article = setup_article
+  end
+  
+  article.comments.create(
+     {:author => "author", :body => "A comment"}.merge(attrs))
+end
+
+# Load a fixture and return the repos uri.
+def load_svn_fixture(name)
+  require(File.join(File.dirname(__FILE__), "wistle", "fixtures", "#{name}.rb" ))
+  repos_path = File.join(File.dirname(__FILE__), "..", "lib", "wistle", "tmp", "repo_#{name}" )
+  return "file://" + File.expand_path(repos_path) + "/articles"
+end

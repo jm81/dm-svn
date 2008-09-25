@@ -16,9 +16,9 @@
     
       #left-container
         %h3
-          = link_to 'Recent Articles', url(:articles)
+          = link_to 'Recent Articles', url(:root)
         %ul
-          - Article.published(:limit => 15, :site_id => @site.id).each do |article|
+          - @site.published_articles(:limit => 15).sort{|a, b| b.published_at <=> a.published_at}.each do |article|
             %li
               = link_to article.title, article_url(article)
   

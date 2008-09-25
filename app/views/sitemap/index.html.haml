@@ -7,12 +7,12 @@
 %h2 Categories
 %ul
   - @categories.each do |category|
-    %li= link_to(category, "categories/" + category)
+    %li= link_to(category.name, category.path)
 
 %h2 Articles
 %ul
-  - @articles.all.each do |article|
-    %li= link_to(article.title, 'article.path')
+  - @articles.each do |article|
+    %li= link_to(article.title, article.path)
 
 %h2 Tags
 %ul

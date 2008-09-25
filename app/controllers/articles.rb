@@ -1,32 +1,45 @@
 class Articles < Application
   provides :xml
   include Merb::PaginationHelper
-
+  
   def index
-    if params[:tag]
-      @articles = @site.articles_tagged(
-          params[:tag], :page => params[:page], :limit => 5)
-    else
-      @articles = @site.published_by_category(
-          params[:category], :page => params[:page], :limit => 5)
-    end
-    
-    display @articles
+    by_date
   end
   
-  def by_date
-    @articles = @site.published_by_date(params[:year], params[:month], params[:day],
-        :page => params[:page], :limit => 5)
+  def by_tag
+    @articles = @site.articles_tagged(
+      params[:tag], :page => params[:page], :limit => @site.per_page
+    )
     
-    render :index
+    display @articles, :index
+  end
+  
+  # Also the default route
+  def by_date
+    @articles = @site.published_articles({
+        :page => params[:page], :limit => @site.per_page,
+        :year => params[:year], :month => params[:month], :day => params[:day]
+    })
+    
+    display @articles, :index
+  end
+
+  def by_path
+    obj = Article.get(@site, params[:path], true, true)
+    
+    if obj.nil?
+      raise NotFound
+    elsif obj.is_a? Article
+      @article = obj
+      display @article, :show
+    else
+      @articles = obj.published_articles(:page => params[:page], :limit => @site.per_page)
+      display @articles, :index
+    end
   end
 
   def show
-    if params[:path]
-      @article = Article.first(:svn_name => params[:path], :site_id => @site.id)
-    else
-      @article = Article.first(:id => params[:id], :site_id => @site.id)
-    end
+    @article = @site.articles.get_published(params[:id])
     
     raise NotFound unless @article
     display @article

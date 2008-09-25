@@ -1,9 +1,16 @@
 class Site
   include DataMapper::Resource
+  include ArticleAncestor
+
   attr_accessor :path_from_root # Used by Sync.
   
-  has n, :articles
-  has n, :comments, :through => :articles
+  has n, :categories, :order => [:name]
+  has n, :top_level_categories,
+      :class_name => 'Category',
+      :parent_id => nil,
+      :order => [:name]
+  has n, :articles, :through => :categories
+  has n, :comments
   has n, :taggings, :through => :articles
   has n, :tags, :through => :taggings
   
@@ -18,6 +25,7 @@ class Site
   property :views_revision, Integer, :default => 0
   property :public_uri, Text
   property :public_revision, Integer, :default => 0
+  property :per_page, Integer, :default => 5
   
   property :username, String
   property :password, String
@@ -68,36 +76,7 @@ class Site
   end
   
   def sync
-    SiteSync.new(self).run
-  end
-  
-  def categories 
-    repository.adapter.query('SELECT category FROM articles WHERE site_id = ? group by category order by category', self.id)
-  end
-  
-  def published_by_category(category = nil, options = {})
-    conditions = "datetime(published_at) <= datetime('now') "
-    if category
-      conditions << "and svn_name like '#{category}/%' "
-    end
-    Article.all(options.merge(
-          :conditions => [conditions + "and site_id = ?", self.id],
-          :order => [:published_at.desc]))
-  end
-  
-  def published_by_date(year, month, day, options)
-    dt = Time.parse("#{year}-#{month || 1}-#{day || 1}").strftime("%Y-%m-%d")
-    if day
-      c = ["strftime('%Y-%m-%d', published_at) = strftime('%Y-%m-%d', ?) and site_id = ?", dt, self.id]
-    elsif month
-      c = ["strftime('%Y-%m', published_at) = strftime('%Y-%m', ?) and site_id = ?", dt, self.id]
-    else
-      c = ["strftime('%Y', published_at) = strftime('%Y', ?) and site_id = ?", dt, self.id]
-    end
-    
-    Article.all(options.merge(
-          :conditions => c,
-          :order => [:published_at.desc]))
+    SiteSvn::Sync.new(self).run
   end
   
   # Get all articles with a given tag
@@ -107,6 +86,7 @@ class Site
     return 0 unless tag
     t = self.taggings(options.merge(:tag_id => tag.id))
     collection = t.collect{|tagging| tagging.article}
+    collection = collection.delete_if{|a| !a.published?}
     
     collection.instance_variable_set(:@pages, t.pages)
     collection.instance_variable_set(:@current_page, t.current_page)
@@ -129,18 +109,12 @@ class Site
   
   # Reassociate comments with articles based on Article#path for all comments.
   # This is designed to be used if all articles need to be reloaded from
-  # Subversion repo, which would cause loss of associations. As a major issue,
-  # comments are only associated to a Site via an Article, so this really isn't
-  # that useful; this should be corrected soon. If all comments are 
-  # reassociated, returns +true+; otherwise, an Array of Comment that did not
-  # reassociate.
+  # Subversion repo, which would cause loss of associations.
   def reassociate_comments
     failed = []
     
-    self.articles.each do |article|
-      article.comments.each do |comment|
-        failed << comment unless comment.reassociate_to_article
-      end
+    self.comments.each do |comment|
+      failed << comment unless comment.reassociate_to_article
     end
     
     failed.empty? ? true : failed
@@ -162,10 +136,23 @@ class Site
     
     def a.get(path_or_id)
       if path_or_id.is_a?(String)
-        first(:svn_name => path_or_id)
+        Article.get(self.instance_variable_get("@parent"), path_or_id) ||
+        super
       else
         super
       end
+    end
+    
+    def a.get_published(path_or_id)
+      if path_or_id.is_a?(String)
+        article = 
+          Article.get(self.instance_variable_get("@parent"), path_or_id, false, true) ||
+          get(path_or_id)
+      else
+        article = get(path_or_id)
+      end
+      
+      (article && article.published?) ? article : nil
     end
     
     a

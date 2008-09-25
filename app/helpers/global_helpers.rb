@@ -10,15 +10,20 @@ module Merb
     # @raise [RuntimeError] if parent is unrecognized
     def reply_to(parent)
       if parent.is_a?(Article)
-        url(:new_article_comment,
-            :article_id => parent.id)
+        "/#{parent.path}/comments/new"
       elsif parent.is_a?(Comment)
-        url(:new_article_comment,
-            :article_id => parent.article_id,
-            :parent_id => parent.id)
+        "/#{parent.article.path}/comments/new?parent_id=#{parent.id}"
       else
         raise RuntimeError, "parent must be an Article or Comment"
       end
+    end
+    
+    def comments_url(article)
+      "/#{article.path}/comments"
+    end
+    
+    def comment_url(comment)
+      "/#{comment.article.path}/comments/#{comment.id}"
     end
     
     def article_url(article)

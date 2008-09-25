@@ -12,7 +12,7 @@ module Wistle
       
       def initialize(changes, revision, author, date, sync)
         @changes, @revision, @author, @date = changes, revision, author, date
-        @model, @config, @repos = sync.model, sync.config, sync.repos
+        @model, @config, @repos, @sync = sync.model, sync.config, sync.repos, sync
       end
       
       # Changesets are sorted by revision number, ascending.
@@ -30,15 +30,15 @@ module Wistle
         modified, deleted, copied = [], [], []
         
         changes.each_pair do |path, change|
-          next if short_path(path).blank?
+          next if short_path(path).blank? || !path_in_root?(path)
           
           case change.action
           when "M", "A", "R" # Modified, Added or Replaced
-            modified << path if @repos.stat(path, @revision).file?
+            modified << path
           when "D"
             deleted << path
           end
-          copied << [path, change.copyfrom_path] if change.copyfrom_path        
+          copied << [path, change.copyfrom_path] if change.copyfrom_path
         end
               
         # Perform moves
@@ -59,7 +59,7 @@ module Wistle
         end
         
         # Perform modifies and adds
-        modified.each do |path|          
+        modified.each do |path|
           node = Node.new(self, path)
           
           if @config.extension && 
@@ -78,7 +78,7 @@ module Wistle
   
           # update record
           record.update_from_svn(node)
-        end      
+        end
       end
     
       # Get the relative path from config.uri
@@ -88,8 +88,13 @@ module Wistle
         path.sub!(/\.#{@config.extension}\Z/, '') if @config.extension
         path
       end
-    
+          
       private
+      
+      def path_in_root?(path)
+        return true if @config.path_from_root.blank?
+        path[0..@config.path_from_root.length - 1].to_s == @config.path_from_root
+      end
       
       # Get an object of the @model, by path.
       def get(path)

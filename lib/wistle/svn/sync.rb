@@ -33,12 +33,14 @@ module Wistle
         changesets.each do |c| # Sorted by revision, ascending
           c.process          
           # Update model_row.revision
-          @model_row.update_attributes(:revision => c.revision)
+          row_update = @model_row.class.get(@model_row.id)
+          row_update.update_attributes(:revision => c.revision)
         end
         
         # Ensure that @model_row.revision is now set to the latest (even if there
         # weren't applicable changes in the latest revision).
-        @model_row.update_attributes(:revision => @repos.latest_revnum)
+        row_update = @model_row.class.get(@model_row.id)
+        row_update.update_attributes(:revision => @repos.latest_revnum)
         return true
       end
       
