@@ -24,6 +24,7 @@ Merb::Router.prepare do |r|
   r.match('/').to(:controller => 'articles', :action =>'by_date').name(:root)
   r.match('/articles/sync').to(:controller => 'articles', :action => 'sync')
   r.match('/articles/sync_all').to(:controller => 'articles', :action => 'sync_all')
+  r.match('/articles.xml').to(:controller => 'articles', :action => 'index', :format => "xml")
   
   r.match('/sitemap.xml').to(:controller => 'sitemap', :action => 'index', :format => "xml")
   r.match('/sitemap').to(:controller => 'sitemap', :action => 'index').name(:sitemap)
