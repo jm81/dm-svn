@@ -2,7 +2,7 @@
   - if collection.current_page == 1
     %span#pagePrevious.pageDisabled= "&laquo;"
   - else
-    = link_to("&laquo;", url(params.merge({:page => collection.current_page - 1})), :id => 'pagePrevious')
+    = link_to("&laquo;", "#{request.path}?page=#{collection.current_page - 1}", :id => 'pagePrevious')
 
   - page_set(collection, padding).each do |page|
     - if page == 0
@@ -10,8 +10,8 @@
     - elsif page == collection.current_page
       %span.pageCurrent= page
     - else
-      = link_to(page, url(params.merge({:page => page})), :class => "pageNumber")
+      = link_to(page, "#{request.path}?page=#{page}", :class => "pageNumber")
   - if collection.current_page == collection.pages
     %span#pageNext.pageDisabled= "&raquo;"
   - else
-    = link_to("&raquo;", url(params.merge({:page => collection.current_page + 1})), :id => 'pageNext')
+    = link_to("&raquo;", "#{request.path}?page=#{collection.current_page + 1}", :id => 'pageNext')

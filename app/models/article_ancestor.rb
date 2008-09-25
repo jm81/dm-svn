@@ -28,15 +28,19 @@ module ArticleAncestor
       }.merge(options)
     
     # Surely, there is a better way..
-    all = self.descendant_articles(options)
-    sorted = all.sort{|a, b| b.published_at <=> a.published_at}
+    if self.is_a? Site
+      all = self.articles.all(options)
+    else
+      # Basically, ignore pagination for Categories. TODO fix.
+      options.delete(:page)
+      options.delete(:limit)
+      all = self.descendant_articles(options)
+      all.sort{|a, b| b.published_at <=> a.published_at}
+      def all.pages; 1; end
+      def all.current_page; 1; end
+    end
     
-    sorted.instance_variable_set(:@pages, all.pages)
-    sorted.instance_variable_set(:@current_page, all.current_page)
-    def sorted.pages; @pages; end
-    def sorted.current_page; @current_page; end  
-    
-    sorted
+    all
   end
   
   
