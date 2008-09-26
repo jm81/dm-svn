@@ -79,6 +79,10 @@ class Site
     SiteSvn::Sync.new(self).run
   end
   
+  def generate(gen_repos_path = nil)
+    Site::Generator.new(self, gen_repos_path).run
+  end
+  
   # Get all articles with a given tag
   # Round-about because I can't figure out the ambiguous column name errors
   def articles_tagged(tag, options = {})
@@ -186,6 +190,17 @@ class Site
       Site.all.each do |site|
         site.sync if site.contents_uri
       end
+    end
+    
+    def generate(name, options)
+      repos_parent = options.delete(:root)
+      repos_root = nil
+      if repos_parent
+        repos_root = "#{repos_parent}/#{name}"
+        options[:contents_uri] = "file://#{repos_parent}/#{name}/trunk/articles"
+      end
+      s = Site.get(name) || Site.create(options.merge({:name => name}))
+      s.generate(repos_root)
     end
   end
 end

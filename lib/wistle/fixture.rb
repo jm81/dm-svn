@@ -20,14 +20,14 @@ module Wistle
       attr_reader :repos, :ctx, :wc_path
       
       class << self
-        def get(name)
-          @@repositories[name] ||= Repository.new(name)
+        def get(name, repos_path)
+          @@repositories[name] ||= Repository.new(name, repos_path)
         end
       end  
       
-      def initialize(name)
+      def initialize(name, repos_path = nil)
         @name = name
-        @repos_path = BASE_PATH + 'repo_' + name
+        @repos_path = repos_path || (BASE_PATH + 'repo_' + name)
         @wc_path = BASE_PATH + 'wc_' + name
         @revisions = []
       end
@@ -136,6 +136,14 @@ module Wistle
         @repo.ctx.cp(@path + from, @path + to)
       end
       
+      def copy_from_wistle(wistle_path)
+        wistle_path = ::File.expand_path(
+          ::File.dirname(__FILE__) + "/../../" + wistle_path)
+        path = @path + wistle_path.split("/")[-1]
+        FileUtils.cp(wistle_path, path)
+        @repo.ctx.add(path)
+      end
+      
       def delete(name)
         @repo.ctx.delete(@path + name)
       end
@@ -161,8 +169,8 @@ module Wistle
   end
 end
 
-def svn_repo(name, &block)
-  r = Wistle::Fixture::Repository.get(name)
+def svn_repo(name, repos_path = nil, &block)
+  r = Wistle::Fixture::Repository.get(name, repos_path)
   r.instance_eval(&block) if block_given?
   r
 end
