@@ -93,10 +93,16 @@ a {
   background-color: #fff; }
 
 .article h2 {
-  margin: .3em 0 .3em 0; }
+  margin: .3em 0 .3em 0;
+  font-size: 1.5em;
+  font-family: serif;
+  font-weight: 700;
+  color: #000; }
 .article .byline {
   font-size: 0.7em;
   color: #c55; }
+.article li {
+  margin-left: 2em; }
 
 ul.comments {
   margin-top: 1em;

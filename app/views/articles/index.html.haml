@@ -2,3 +2,5 @@
   = partial 'article', :article => article, :show_links => true
   .article_links
     %a{:href => article_url(article)}== #{article.comments.count} Comments
+  %br
+  %hr
