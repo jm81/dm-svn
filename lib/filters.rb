@@ -20,6 +20,7 @@ module Filters
     'Markdown' => [['rdiscount', 'RDiscount'], ['bluecloth', 'BlueCloth']],
     'Textile' => [['redcloth', 'RedCloth']],
     'BibleML' => [[File.dirname(__FILE__) + '/filters/bible_ml', 'BibleML']],
+    'Linebreaker' => [[File.dirname(__FILE__) + '/filters/linebreaker', 'Linebreaker']],
   }
   
   def self.process(filters, content)
