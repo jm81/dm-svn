@@ -176,7 +176,7 @@ class Site
       end
 
       possible.sort!{ |a, b| b[1] <=> a[1] }
-      possible[0] ? possible[0][0] : nil
+      possible[0] ? Site.get(possible[0][0].id) : nil
     end
     
     def reset_exports
@@ -188,7 +188,7 @@ class Site
     def sync_all(force_exports = false)
       reset_exports if force_exports
       Site.all.each do |site|
-        site.sync if site.contents_uri
+        Site.get(site.id).sync if site.contents_uri
       end
     end
     
