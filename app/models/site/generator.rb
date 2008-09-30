@@ -52,6 +52,9 @@ class Site
             end
             
             dir 'public' do
+              copy_from_wistle 'public/robots.txt'
+              copy_from_wistle 'public/favicon.ico'
+              
               dir 'images'
               
               dir 'javascripts'
