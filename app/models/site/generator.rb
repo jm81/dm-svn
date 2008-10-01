@@ -66,7 +66,18 @@ class Site
               end
             end
             
-            dir 'articles'
+            dir 'articles' do
+              dir 'sample' do
+                prop 'ws:name', 'Sample Category'
+                
+                file 'sample_article.txt' do
+                  prop 'ws:title', 'Sample Article'
+                  prop 'ws:published_at', Time.now.strftime("%Y-%m-%d %H:%M:%S")
+                  body "This is a sample article. That means this site is
+                        under construction. Sorry."
+                end
+              end
+            end
             
           end
         end
