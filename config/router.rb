@@ -28,6 +28,7 @@ Merb::Router.prepare do |r|
   
   r.match('/sitemap.xml').to(:controller => 'sitemap', :action => 'index', :format => "xml")
   r.match('/sitemap').to(:controller => 'sitemap', :action => 'index').name(:sitemap)
+  r.match('/robots.txt').to(:controller => 'sitemap', :action => 'robots', :format => "txt")
   
   r.match(%r[/search/results]).to(
     :controller => 'articles', :action => 'search')

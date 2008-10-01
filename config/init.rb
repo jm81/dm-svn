@@ -116,6 +116,7 @@ Merb::Config.use do |c|
   c[:session_store] = 'cookie'
 end
 
+Merb.add_mime_type(:txt, nil, %w[text/plain])
 
 # ==== Tune your inflector
 
