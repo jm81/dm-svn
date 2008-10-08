@@ -47,5 +47,9 @@ module Merb
     def ads(path)
       partial("ads/#{path}") if Merb::environment == "production"
     end
+    
+    def pagination(*args)
+      ''
+    end
   end
 end
