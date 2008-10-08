@@ -27,7 +27,7 @@ xml.feed "xmlns" => "http://www.w3.org/2005/Atom" do
       
       xml.id(domain + article.path)
       xml.link(:href => (domain + article.path), :rel => 'alternate', :hreflang => 'en-US')
-      xml.category(:term => article.category)
+      xml.category(:term => article.category.name)
       xml.published article.published_at.to_s
       
     end
