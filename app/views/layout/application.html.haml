@@ -31,7 +31,7 @@
       #main-container
         = (catch_content :for_layout)
         %br
-        = pagination(@articles, 5) if @articles && params[:controller] != Sitemap
+        = pagination(@articles, 5) if @articles && params[:controller].to_s != 'sitemap'
   
       #footer-container
         %hr
