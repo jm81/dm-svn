@@ -27,7 +27,7 @@ class BibleML
   }
 
   def initialize(input)
-    @xml = REXML::Document.new("<fg:body>#{input}</fg:body>")
+    @xml = REXML::Document.new("<fg:body xmlns:fg='http://fromgenesis.org'>#{input}</fg:body>")
   end
   
   def to_html
