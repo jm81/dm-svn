@@ -110,6 +110,7 @@ module Wistle
       # Left trim the body and there may have been blank lines added for
       # clarity.
       def yaml_split
+        data[0].gsub("\r", "")
         ary = data[0].split("\n...\n")
         ary[1] = ary[1].lstrip
         ary
