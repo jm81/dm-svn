@@ -11,3 +11,6 @@
 :production:
   <<: *defaults
   :database: /u/data/fs/wistle/pro.db
+
+:rake:
+  <<: *defaults
