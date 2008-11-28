@@ -38,10 +38,8 @@ class Comment
   end
   
   def store_article_path
-    update_attributes({
-      :stored_article_path => self.article.path,
-      :site_id => self.article.site.id
-    })
+    update_attributes(:stored_article_path => self.article.path)
+    update_attributes(:site_id => self.article.site.id)
   end
   
   def reassociate_to_article
