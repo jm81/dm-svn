@@ -2,6 +2,8 @@ class Site
   include DataMapper::Resource
   include ArticleAncestor
 
+  property :id, Integer, :serial => true
+
   attr_accessor :path_from_root # Used by Sync.
   
   has n, :categories, :order => [:name]
@@ -14,7 +16,6 @@ class Site
   has n, :taggings, :through => :articles
   has n, :tags, :through => :taggings
   
-  property :id, Integer, :serial => true
   property :name, String, :unique => true, :nullable => false
   property :domain_regex, String
   

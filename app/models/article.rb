@@ -4,6 +4,8 @@ class Article
   include Filters::Resource
   extend Pagination
   
+  property :id, Integer, :serial => true
+  
   belongs_to :category, :wistle => true
   include SvnExtensions
   
@@ -26,8 +28,7 @@ class Article
   
   has n, :taggings
   has n, :tags, :through => :taggings, :links => [:tagging]
-
-  property :id, Integer, :serial => true
+  
   property :category_id, Integer
   property :title, String, :length => 255
   property :html, Text, :lazy => false

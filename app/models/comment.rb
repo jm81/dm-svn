@@ -2,6 +2,8 @@ class Comment
   include DataMapper::Resource
   include Filters::Resource
   
+  property :id, Integer, :serial => true
+  
   belongs_to :article
   
   belongs_to :parent,
@@ -13,7 +15,6 @@ class Comment
       :child_key => [:parent_id],
       :order => [:created_at.asc]
 
-  property :id, Integer, :serial => true
   property :author, String, :nullable => false, :length => 100
   property :email, String, :format => :email_address
   property :html, Text, :lazy => false

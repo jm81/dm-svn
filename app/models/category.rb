@@ -3,6 +3,8 @@ class Category
   include Wistle::Svn
   include ArticleAncestor
 
+  property :id, Integer, :serial => true
+  
   belongs_to :site
 
   belongs_to :parent,
@@ -22,7 +24,6 @@ class Category
   has n, :taggings, :through => :articles
   has n, :tags, :through => :taggings
 
-  property :id, Integer, :serial => true
   property :parent_id, Integer
   property :name, String
   
