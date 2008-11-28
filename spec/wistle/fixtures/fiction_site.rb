@@ -1,4 +1,4 @@
-require File.dirname(__FILE__) + "/../../../lib/wistle/fixture.rb"
+require File.expand_path(File.dirname(__FILE__) + "/../../../lib/wistle/fixture.rb")
 
 svn_repo('fiction_site') do
   revision(1, 'Create basic directory structure (including articles, app and public)',

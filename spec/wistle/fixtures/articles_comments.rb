@@ -1,6 +1,6 @@
 # This is a repository representing information for two models in one repo.
 
-require File.dirname(__FILE__) + "/../../../lib/wistle/fixture.rb"
+require File.expand_path(File.dirname(__FILE__) + "/../../../lib/wistle/fixture.rb")
 
 svn_repo('articles_comments') do
   revision(1, 'Create articles and comments directories',
