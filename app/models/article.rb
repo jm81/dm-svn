@@ -1,3 +1,5 @@
+require 'category'
+
 class Article
   include DataMapper::Resource
   include Wistle::Svn
