@@ -187,7 +187,7 @@ class BibleML
   end
   
   def to_s
-    @xml.to_s.gsub(/<\/?fg:body>/, '')
+    @xml.to_s.gsub(/<\/?fg:body[^>]*>/, '')
   end
   
   # Add book and chapter information to shorthand references
