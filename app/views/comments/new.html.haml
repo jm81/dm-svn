@@ -2,12 +2,12 @@
 
 = error_messages_for :comment
 
-- form_for(@comment, :action => comments_url(@article)) do |f|
+= form_for(@comment, :action => comments_url(@article)) do |f|
   %input{:type => 'hidden', :name => 'parent_id', :value => params[:parent_id]}
-  %p= text_control :author, :label => 'Your name:'
-  %p= text_control :email,  :label => 'Your email:'
-  %p= text_area_control :body, :label => 'Your comments:'
+  %p= text_field :author, :label => 'Your name:'
+  %p= text_field :email,  :label => 'Your email:'
+  %p= text_area :body, :label => 'Your comments:'
   %p
-    = submit_button "Comment Now!"
+    = submit "Comment Now!"
 
 = link_to 'Back', article_url(@article)
