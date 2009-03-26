@@ -229,10 +229,7 @@ class BibleML
   def get_passage(ref, version = "NASB")
     xhtml = open(bg_link(ref, version)) do |f|
       html = f.read.split('<div class="result-text-style-normal">')[1]
-      html = html.split('</div>')[0]
-      html = html.split('<strong>Cross references')[0]
-      html = html.split('<strong>Footnotes:')[0]
-              
+      html = html.split(/<\/?div/)[0]
       REXML::Document.new("<body>#{html}</body>")
     end
 
