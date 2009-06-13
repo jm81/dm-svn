@@ -83,9 +83,15 @@ module Wistle
     
       # Get the relative path from config.uri
       def short_path(path)
+        path = fs_path(path)
+        path = path.sub(/\.#{@config.extension}\Z/, '') if @config.extension
+        path
+      end
+      
+      # Path used to communicate with svn repos.
+      def fs_path(path)
         path = path[@config.path_from_root.length..-1].to_s
         path = path[1..-1] if path[0] == ?/
-        path.sub!(/\.#{@config.extension}\Z/, '') if @config.extension
         path
       end
           

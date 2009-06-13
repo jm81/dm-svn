@@ -18,6 +18,11 @@ module Wistle
         @changeset.short_path(@path)
       end
       
+      # Shortened path (from Changeset#fs_path)
+      def fs_path
+        @changeset.fs_path(@path)
+      end
+      
       # Body of the node (nil for a directory)
       def body
         return nil unless file?
@@ -38,12 +43,12 @@ module Wistle
       
       # Is the Node a file?
       def file?
-        repos.stat(path, revision).file?
+        repos.stat(fs_path, revision).file?
       end
     
       # Is the Node a directory?
       def directory?
-        repos.stat(path, revision).directory?
+        repos.stat(fs_path, revision).directory?
       end
       
       # Methods derived from Changeset instance variables.
@@ -58,8 +63,8 @@ module Wistle
       # Get data as array of body, properties
       def data
         @data ||= file? ?
-          repos.file(path, revision) :
-          repos.dir(path, revision)
+          repos.file(fs_path, revision) :
+          repos.dir(fs_path, revision)
       end
       
       # Properties based on the revision information: svn_updated_[rev|at|by]
@@ -89,8 +94,9 @@ module Wistle
       # will be "---" and the YAML will end before a line containing "..."
       def yaml_properties
         if directory?
+          fs_yaml_path = fs_path.blank? ? 'meta.yml' : File.join(fs_path, 'meta.yml')
           yaml_path = File.join(@path, 'meta.yml')
-          repos.stat(yaml_path, revision) ?
+          repos.stat(fs_yaml_path, revision) ?
             YAML.load(self.class.new(@changeset, yaml_path).body) :
             {}
         else

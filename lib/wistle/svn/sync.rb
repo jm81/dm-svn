@@ -14,7 +14,7 @@ module Wistle
       def changesets
         sets = []
         
-        @repos.log(@config.path_from_root, @repos.latest_revnum, @model_row.revision, 0, true, false
+        @repos.log('', @model_row.revision, @repos.latest_revnum, 0, true, false
             ) do |changes, rev, author, date, msg|
           sets << Changeset.new(changes, rev, author, date, self)
         end
@@ -31,7 +31,7 @@ module Wistle
         return false if @repos.latest_revnum <= @model_row.revision
         
         changesets.each do |c| # Sorted by revision, ascending
-          c.process          
+          c.process
           # Update model_row.revision
           row_update = @model_row.class.get(@model_row.id)
           row_update.update_attributes(:revision => c.revision)
