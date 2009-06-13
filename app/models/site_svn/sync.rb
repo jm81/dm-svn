@@ -16,7 +16,7 @@ module SiteSvn
     def changesets
       sets = []
       
-      @repos.log(@config.path_from_root, @repos.latest_revnum, @model_row.revision, 0, true, false
+      @repos.log('', @model_row.revision, @repos.latest_revnum, 0, true, false
           ) do |changes, rev, author, date, msg|
         sets << Changeset.new(changes, rev, author, date, self)
       end
@@ -44,7 +44,7 @@ module SiteSvn
       rev = @model_row.__send__("#{name}_revision")
       connect(uri)
       return false if @repos.latest_revnum <= rev
-      updated_rev = @repos.stat(uri[(@repos.repos_root.length)..-1], @repos.latest_revnum).created_rev
+      updated_rev = @repos.stat('', @repos.latest_revnum).created_rev
       return false if updated_rev <= rev
       
       FileUtils.mkdir_p(export_path)
