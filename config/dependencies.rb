@@ -34,3 +34,5 @@ dependency "dm-validations", dm_gems_version
 dependency "dm-serializer", dm_gems_version   
 
 dependency "merb_datamapper", merb_gems_version
+
+dependency "jm81-paginate", "0.1.3", :require_as => "paginate"

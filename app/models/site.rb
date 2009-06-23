@@ -89,7 +89,7 @@ class Site
   def articles_tagged(tag, options = {})
     tag = Tag.first(:name => tag)
     return 0 unless tag
-    t = self.taggings(options.merge(:tag_id => tag.id))
+    t = self.taggings.paginate(options.merge(:tag_id => tag.id))
     collection = t.collect{|tagging| tagging.article}
     collection = collection.delete_if{|a| !a.published?}
     

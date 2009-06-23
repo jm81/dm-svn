@@ -4,7 +4,7 @@ class Article
   include DataMapper::Resource
   include Wistle::Svn
   include Filters::Resource
-  extend Pagination
+  extend Paginate::DM
   
   property :id, Integer, :serial => true
   

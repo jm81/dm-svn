@@ -29,7 +29,7 @@ module ArticleAncestor
     
     # Surely, there is a better way..
     if self.is_a? Site
-      all = self.articles.all(options)
+      all = self.articles.paginate(options)
     else
       # Basically, ignore pagination for Categories. TODO fix.
       options.delete(:page)

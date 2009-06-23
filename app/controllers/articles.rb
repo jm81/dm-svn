@@ -1,6 +1,6 @@
 class Articles < Application
   provides :xml
-  include Merb::PaginationHelper
+  include Paginate::Helpers::Merb
   
   def index
     by_date
