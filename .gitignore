@@ -16,3 +16,6 @@ src/*
 .hgignore
 .hg/*
 .svn/*
+.project
+.loadpath
+lib/wistle/tmp/*
