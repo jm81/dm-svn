@@ -106,7 +106,7 @@ module Migrations
     def run
       site_id = @site_id
 
-      svn_repo(@name) do
+      SvnFixture.repo(@name) do
         rev = 1
         revision(rev, 'Generate tags, trunk and branches directories (Wistle Migration)',
             :author => 'jmorgan',
@@ -188,7 +188,7 @@ module Migrations
         end
       end
       
-      svn_repo(@name).create.commit
+      SvnFixture.repo(@name).commit
       return true
     end
     

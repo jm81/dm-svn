@@ -1,6 +1,10 @@
 require File.join( File.dirname(__FILE__), "..", "spec_helper" )
 
 describe Wistle::Svn::Sync do
+  after(:all) do
+    SvnFixture::Repository.destroy_all
+  end
+  
   describe "#run" do
     before(:all) do
       MockSyncModel.auto_migrate!

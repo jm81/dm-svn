@@ -80,7 +80,6 @@ end
 # Load a fixture and return the repos uri.
 def load_svn_fixture(name)
   script = File.expand_path(File.join(File.dirname(__FILE__), "wistle", "fixtures", "#{name}.rb" ))
-  require script
-  repos_path = File.join(File.dirname(__FILE__), "..", "lib", "wistle", "tmp", "repo_#{name}" )
-  return "file://" + File.expand_path(repos_path) + "/articles"
+  load script
+  return SvnFixture.repo(name).uri + "/articles"
 end

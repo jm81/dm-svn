@@ -15,6 +15,10 @@ describe SiteSvn do
     @news_site = Site.get(@news_site.id)
   end
   
+  after(:all) do
+    SvnFixture::Repository.destroy_all
+  end
+  
   describe "(fiction)" do
     it "should be at revision 5" do
       @fiction_site.contents_revision.should == 5

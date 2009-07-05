@@ -1,8 +1,6 @@
 # This is a repository representing information for two models in one repo.
 
-require File.expand_path(File.dirname(__FILE__) + "/../../../lib/wistle/fixture.rb")
-
-svn_repo('articles_comments') do
+SvnFixture.repo('articles_comments') do
   revision(1, 'Create articles and comments directories',
       :date => Time.parse("2007-01-01")) do
     dir 'articles'
@@ -94,4 +92,4 @@ svn_repo('articles_comments') do
   end
 end
 
-svn_repo('articles_comments').create.commit
+SvnFixture.repo('articles_comments').commit

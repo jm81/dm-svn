@@ -18,6 +18,10 @@ describe Wistle::Svn::Node do
     @file = Wistle::Svn::Node.new(@cs3, "/articles/unpublished.txt")
   end
   
+  after(:all) do
+    SvnFixture::Repository.destroy_all
+  end
+  
   it "should get short_path" do
     @file.short_path.should == "unpublished"
   end

@@ -1,4 +1,15 @@
-require File.expand_path(File.dirname(__FILE__) + "/../../../lib/wistle/fixture.rb")
+# Update SvnFixture::Directory to add #copy_from_wistle helper method.
+module SvnFixture
+  class Directory 
+    def copy_from_wistle(wistle_path)
+      wistle_path = ::File.expand_path(
+        ::File.dirname(__FILE__) + "/../../" + wistle_path)
+      path = @path + wistle_path.split("/")[-1]
+      FileUtils.cp(wistle_path, path)
+      @ctx.add(path)
+    end
+  end
+end
 
 class Site
   class Generator
@@ -12,7 +23,7 @@ class Site
     def run
       trunk_tags_branches
       basic
-      svn_repo(@repo_name).create.commit
+      SvnFixture.repo(@repo_name).commit
     end
     
     def next_rev
@@ -22,7 +33,7 @@ class Site
     # Create "normal" base folders.
     def trunk_tags_branches
       rev = next_rev
-      svn_repo(@repo_name, @repos_path) do
+      SvnFixture.repo(@repo_name, @repos_path) do
         rev = revision(
                 rev,
                 'Generate trunks, tags, and branches folders',
@@ -36,7 +47,7 @@ class Site
     
     def basic
       rev = next_rev
-      svn_repo(@repo_name) do
+      SvnFixture.repo(@repo_name) do
         rev = revision(
                 rev,
                 'Generate directory structure expected by Wistle',

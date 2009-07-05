@@ -1,6 +1,4 @@
-require File.expand_path(File.dirname(__FILE__) + "/../../../lib/wistle/fixture.rb")
-
-svn_repo('news_site') do
+SvnFixture::repo('news_site') do
   revision(1, 'Create basic directory structure (including articles, app and public)',
       :date => Time.parse("2008-08-01")) do
     dir 'articles'
@@ -54,4 +52,4 @@ svn_repo('news_site') do
   end
 end
 
-svn_repo('news_site').create.commit
+SvnFixture.repo('news_site').commit
