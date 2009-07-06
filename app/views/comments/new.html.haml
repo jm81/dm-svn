@@ -7,6 +7,7 @@
   %p= text_field :author, :label => 'Your name:'
   %p= text_field :email,  :label => 'Your email:'
   %p= text_area :body, :label => 'Your comments:'
+  %p= recaptcha_tags
   %p
     = submit "Comment Now!"
 

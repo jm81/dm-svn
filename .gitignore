@@ -19,3 +19,4 @@ src/*
 .project
 .loadpath
 lib/wistle/tmp/*
+config/recaptcha.yml

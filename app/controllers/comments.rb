@@ -21,11 +21,15 @@ class Comments < Application
   def create
     @comment = Comment.new(params[:comment])
     @article.comments << @comment
-    p @parent
     @parent.replies << @comment if @parent
-    if @comment.save
+    
+    if (captcha_correct = recaptcha_valid?) && @comment.save
       redirect comment_url(@comment)
     else
+      unless captcha_correct
+        @comment.valid?
+        @comment.errors.add(:general, "Captcha code is incorrect")
+      end
       render :new
     end
   end

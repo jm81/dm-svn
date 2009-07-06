@@ -21,6 +21,10 @@ end
  
 Merb::BootLoader.after_app_loads do
   # This will get executed after your app's classes have been loaded.
+  
+  # Recaptcha keys should be placed in recaptcha.yml. Copy recaptcha_sample.yml
+  # and add your keys.
+  Merb::Plugins.config[:merb_recaptcha] = YAML.load_file(File.join(File.dirname(__FILE__), 'recaptcha.yml'))
 end
 
 Merb.add_mime_type(:txt, nil, %w[text/plain])
