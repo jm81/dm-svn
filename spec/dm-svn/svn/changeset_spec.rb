@@ -1,22 +1,22 @@
 require File.join( File.dirname(__FILE__), "..", "spec_helper" )
 
-describe Wistle::Svn::Changeset do
+describe DmSvn::Svn::Changeset do
   before(:all) do
-    Wistle::Model.auto_migrate!
+    DmSvn::Model.auto_migrate!
   end
   
   describe "#short_path" do
     before(:each) do
-      Wistle::Model.all.each { |m| m.destroy }
-      sync = mock('Wistle::Svn::Sync')
-      @config = Wistle::Config.new
+      DmSvn::Model.all.each { |m| m.destroy }
+      sync = mock('DmSvn::Svn::Sync')
+      @config = DmSvn::Config.new
       @config.extension = nil
       @config.path_from_root = "/articles"
       sync.stub!(:config).and_return @config
       sync.stub!(:model).and_return nil
       sync.stub!(:repos).and_return nil
       
-      @changeset = Wistle::Svn::Changeset.new([], 1, '', Time.now, sync)
+      @changeset = DmSvn::Svn::Changeset.new([], 1, '', Time.now, sync)
     end
     
     it "should remove 'leading path'" do

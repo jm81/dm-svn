@@ -1,17 +1,17 @@
-module Wistle
+module DmSvn
   module Svn
     
     module ClassMethods
       
-      # Override belongs_to to add a :wistle option if :wistle => true, include
+      # Override belongs_to to add a :dm-svn option if :dm-svn => true, include
       # Categorized and set up @svn_category and @svn_category_model instance
       # methods.
       def belongs_to(what, options = {})
-        ws = options.delete(:wistle)
-        if ws
+        svn = options.delete(:svn)
+        if svn
           @svn_category = what
           @svn_category_model = options[:class_name] || what.to_s.camel_case
-          include(Wistle::Svn::Categorized)
+          include(DmSvn::Svn::Categorized)
         end
         
         super
@@ -29,7 +29,7 @@ module Wistle
       
     end
     
-    # This module is including when belongs_to is called with :wistle => true.
+    # This module is including when belongs_to is called with :dm-svn => true.
     # It overrides #path and #path= to take into account categories (folders in 
     # the Subversion repository). It also overrides .get to accept get_parent
     # argument.

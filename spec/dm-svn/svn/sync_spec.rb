@@ -1,24 +1,24 @@
 require File.join( File.dirname(__FILE__), "..", "spec_helper" )
 
-describe Wistle::Svn::Sync do
+describe DmSvn::Svn::Sync do
   after(:all) do
     SvnFixture::Repository.destroy_all
   end
   
   describe "#run" do
     before(:all) do
-      Wistle::Model.auto_migrate!
+      DmSvn::Model.auto_migrate!
       MockSyncModel.auto_migrate!
       @repos_uri = load_svn_fixture('articles_comments')
     end
     
     before(:each) do
       MockSyncModel.all.each { |m| m.destroy }
-      Wistle::Model.all.each { |m| m.destroy }
-      @ws_model = Wistle::Model.create(:name => 'MockSyncModel', :revision => 0)
-      @ws_model.config = Wistle::Config.new
+      DmSvn::Model.all.each { |m| m.destroy }
+      @ws_model = DmSvn::Model.create(:name => 'MockSyncModel', :revision => 0)
+      @ws_model.config = DmSvn::Config.new
       @ws_model.config.uri = @repos_uri
-      @sync = Wistle::Svn::Sync.new(@ws_model)
+      @sync = DmSvn::Svn::Sync.new(@ws_model)
     end
     
     # This is a generic "it should just work" test
@@ -46,24 +46,24 @@ describe Wistle::Svn::Sync do
       MockSyncModel.first(:svn_name => "computers.txt").should be_nil
     end
     
-    it "should update Wistle::Model entry" do
+    it "should update DmSvn::Model entry" do
       @sync.run
-      Wistle::Model.get(@ws_model.id).revision.should == 9
+      DmSvn::Model.get(@ws_model.id).revision.should == 9
     end
   
     it "should return false if already at the youngest revision" do
       @sync.run.should be_true
-      @ws_model = Wistle::Model.get(@ws_model.id)
-      @ws_model.config = Wistle::Config.new
+      @ws_model = DmSvn::Model.get(@ws_model.id)
+      @ws_model.config = DmSvn::Config.new
       @ws_model.config.uri = @repos_uri
-      @sync = Wistle::Svn::Sync.new(@ws_model)
+      @sync = DmSvn::Svn::Sync.new(@ws_model)
       @sync.run.should be_false
     end
   end
   
   describe "#run (categorized)" do
     before(:all) do
-      Wistle::Model.auto_migrate!
+      DmSvn::Model.auto_migrate!
       MockCategory.auto_migrate!
       MockCategorizedArticle.auto_migrate!
       @repos_uri = load_svn_fixture('articles_comments')[0..-10]
@@ -72,11 +72,11 @@ describe Wistle::Svn::Sync do
     before(:each) do
       MockCategory.all.each { |m| m.destroy }
       MockCategorizedArticle.all.each { |m| m.destroy }
-      Wistle::Model.all.each { |m| m.destroy }
-      @ws_model = Wistle::Model.create(:name => 'MockCategorizedArticle', :revision => 0)
-      @ws_model.config = Wistle::Config.new
+      DmSvn::Model.all.each { |m| m.destroy }
+      @ws_model = DmSvn::Model.create(:name => 'MockCategorizedArticle', :revision => 0)
+      @ws_model.config = DmSvn::Config.new
       @ws_model.config.uri = @repos_uri
-      @sync = Wistle::Svn::Sync.new(@ws_model)
+      @sync = DmSvn::Svn::Sync.new(@ws_model)
     end
     
     it "should update database, when categorized" do

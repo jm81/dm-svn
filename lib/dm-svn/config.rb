@@ -1,4 +1,4 @@
-module Wistle
+module DmSvn
   class Config
     OPTS = [:uri, :username, :password,
             :body_property, :property_prefix, :extension]

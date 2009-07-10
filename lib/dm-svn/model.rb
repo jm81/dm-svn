@@ -1,4 +1,4 @@
-module Wistle
+module DmSvn
   class Model
     include DataMapper::Resource
   
@@ -6,7 +6,7 @@ module Wistle
     property :name, String
     property :revision, Integer
     
-    # Wistle::Config object
+    # DmSvn::Config object
     attr_accessor :config
   end
 end

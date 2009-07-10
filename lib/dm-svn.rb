@@ -4,9 +4,9 @@ require 'dm-aggregates' # Only needed by specs, but this seems the easiest place
 require 'dm-validations'
 require 'svn/client'
 
-module Wistle
+module DmSvn
 end
 
 %w{config svn model}.each do |f|
-  require File.expand_path(File.dirname(__FILE__) + "/wistle/#{f}.rb")
+  require File.expand_path(File.dirname(__FILE__) + "/dm-svn/#{f}.rb")
 end

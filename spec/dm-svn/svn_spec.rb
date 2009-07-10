@@ -1,8 +1,8 @@
 require File.join( File.dirname(__FILE__), "spec_helper" )
 
-describe Wistle::Svn do
+describe DmSvn::Svn do
   before(:all) do
-    Wistle::Model.auto_migrate!
+    DmSvn::Model.auto_migrate!
     MockArticle.auto_migrate!
   end
   
@@ -18,9 +18,9 @@ describe Wistle::Svn do
     end
   end
   
-  it "should assign @config to an instance of Wistle::Config" do
+  it "should assign @config to an instance of DmSvn::Config" do
     c = MockArticle.config
-    c.should be_kind_of(Wistle::Config)
+    c.should be_kind_of(DmSvn::Config)
     c.should be(MockArticle.config)
   end
   
@@ -49,7 +49,7 @@ describe Wistle::Svn do
   
   describe '#update_from_svn' do
     before(:each) do
-      @node = mock(Wistle::Svn::Node)
+      @node = mock(DmSvn::Svn::Node)
     end
     
     it 'should update path, body and other properties' do
@@ -80,55 +80,55 @@ describe Wistle::Svn do
   
   describe ".svn_repository" do
     before(:each) do
-      @wistle_model = mock(Wistle::Model)
-      @wistle_model.stub!(:config=)
+      @svn_model = mock(DmSvn::Model)
+      @svn_model.stub!(:config=)
       MockArticle.instance_variable_set("@svn_repository", nil)
     end
     
     it "should return an already set repository" do
-      Wistle::Model.should_not_receive(:first)
-      Wistle::Model.should_not_receive(:create)
-      MockArticle.instance_variable_set("@svn_repository", @wistle_model)
-      MockArticle.svn_repository.should be(@wistle_model)
+      DmSvn::Model.should_not_receive(:first)
+      DmSvn::Model.should_not_receive(:create)
+      MockArticle.instance_variable_set("@svn_repository", @svn_model)
+      MockArticle.svn_repository.should be(@svn_model)
     end
     
-    it "should find an existing Wistle::Model" do
-      Wistle::Model.should_receive(:first).with(:name => 'MockArticle').
-          and_return(@wistle_model)
-      Wistle::Model.should_not_receive(:create)
-      MockArticle.svn_repository.should be(@wistle_model)
+    it "should find an existing DmSvn::Model" do
+      DmSvn::Model.should_receive(:first).with(:name => 'MockArticle').
+          and_return(@svn_model)
+      DmSvn::Model.should_not_receive(:create)
+      MockArticle.svn_repository.should be(@svn_model)
     end
     
-    it "should create an new Wistle::Model if needed" do
-      Wistle::Model.should_receive(:first).with(:name => 'MockArticle').
+    it "should create an new DmSvn::Model if needed" do
+      DmSvn::Model.should_receive(:first).with(:name => 'MockArticle').
           and_return(nil)
-      Wistle::Model.should_receive(:create).with(:name => 'MockArticle', :revision => 0).
-          and_return(@wistle_model)
-      MockArticle.svn_repository.should be(@wistle_model)
+      DmSvn::Model.should_receive(:create).with(:name => 'MockArticle', :revision => 0).
+          and_return(@svn_model)
+      MockArticle.svn_repository.should be(@svn_model)
     end
     
-    it "should really create a new Wistle::Model" do
-      Wistle::Model.all.each {|m| m.destroy }
-      Wistle::Model.count.should == 0
+    it "should really create a new DmSvn::Model" do
+      DmSvn::Model.all.each {|m| m.destroy }
+      DmSvn::Model.count.should == 0
       MockArticle.svn_repository
-      Wistle::Model.count.should == 1
+      DmSvn::Model.count.should == 1
       MockArticle.instance_variable_set("@svn_repository", nil)
       MockArticle.svn_repository
-      Wistle::Model.count.should == 1
+      DmSvn::Model.count.should == 1
     end
     
-    it "should assign @config to the Wistle::Model" do
-      Wistle::Model.should_receive(:first).with(:name => 'MockArticle').
-          and_return(@wistle_model)
-      @wistle_model.should_receive(:config=).with(MockArticle.config)
+    it "should assign @config to the DmSvn::Model" do
+      DmSvn::Model.should_receive(:first).with(:name => 'MockArticle').
+          and_return(@svn_model)
+      @svn_model.should_receive(:config=).with(MockArticle.config)
       MockArticle.svn_repository
     end
     
     it "should run sync" do
-      Wistle::Model.should_receive(:first).with(:name => 'MockArticle').
-          and_return(@wistle_model)
-      sync = mock(Wistle::Svn::Sync)
-      Wistle::Svn::Sync.should_receive(:new).with(@wistle_model).and_return(sync)
+      DmSvn::Model.should_receive(:first).with(:name => 'MockArticle').
+          and_return(@svn_model)
+      sync = mock(DmSvn::Svn::Sync)
+      DmSvn::Svn::Sync.should_receive(:new).with(@svn_model).and_return(sync)
       sync.should_receive(:run)
       MockArticle.sync
     end

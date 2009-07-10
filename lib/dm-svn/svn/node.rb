@@ -1,4 +1,4 @@
-module Wistle
+module DmSvn
   module Svn
 
     # A Node (file or directory) at a path and revision [Changeset].

@@ -1,4 +1,4 @@
-module Wistle
+module DmSvn
   module Svn
 
     # Store information about a particular changeset, and runs the actual

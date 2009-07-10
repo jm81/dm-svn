@@ -1,8 +1,8 @@
 require File.join( File.dirname(__FILE__), "spec_helper" )
 
-describe Wistle::Config do
+describe DmSvn::Config do
   before(:each) do
-    @c = Wistle::Config.new
+    @c = DmSvn::Config.new
   end
   
   it "should initialize @body_property to 'body'" do
@@ -36,7 +36,7 @@ describe Wistle::Config do
     yaml = File.read(File.dirname(__FILE__) + '/database.yml')
     IO.should_receive(:read).with(f).and_return(yaml)
  
-    c = Wistle::Config.new
+    c = DmSvn::Config.new
     c.username.should == 'login'
     c.password.should == 'pw1234'
     c.extension.should == 'doc'

@@ -2,7 +2,7 @@ require 'spec'
 
 $LOAD_PATH.unshift(File.dirname(__FILE__))
 $LOAD_PATH.unshift(File.join(File.dirname(__FILE__), '..', 'lib'))
-require 'wistle'
+require 'dm-svn'
 
 gem 'jm81-svn-fixture'
 require 'svn-fixture'
@@ -20,7 +20,7 @@ end
 
 # Load a fixture and return the repos uri.
 def load_svn_fixture(name)
-  script = File.expand_path(File.join(File.dirname(__FILE__), "wistle", "fixtures", "#{name}.rb" ))
+  script = File.expand_path(File.join(File.dirname(__FILE__), "dm-svn", "fixtures", "#{name}.rb" ))
   load script
   return SvnFixture.repo(name).uri + "/articles"
 end

@@ -1,4 +1,4 @@
-module Wistle
+module DmSvn
   module Svn
     
     class << self
@@ -49,7 +49,7 @@ module Wistle
       self.save
     end
     
-    # Update properties (body and other properties) from a Wistle::Svn::Node
+    # Update properties (body and other properties) from a DmSvn::Svn::Node
     # or similar (expects #body as a String and #properties as a Hash).
     # This method calls #save.
     def update_from_svn(node)
@@ -75,9 +75,9 @@ module Wistle
         @config ||= Config.new
       end
       
-      # Override belongs_to to add +:wistle+ option. If :wistle => true is
+      # Override belongs_to to add +:svn+ option. If :svn => true is
       # included in the options, SvnSync will also sync the +belongs_to+ model.
-      # For example, <code>belongs_to :category, :wistle => true</code>, means
+      # For example, <code>belongs_to :category, :svn => true</code>, means
       # that the Category model will also be updated by SvnSync, and be based on
       # folders. Folders can have svn properties set, and/or a meta.yml file
       # with properties.
@@ -86,7 +86,7 @@ module Wistle
       # end
       
       # Override DataMapper's +property+ class method to accept as an option
-      # +body_property+. Setting this option tells Wistle::Svn that this field
+      # +body_property+. Setting this option tells DmSvn::Svn that this field
       # will store the contents of the repository file.
       def property(name, type, options = {})
         if options.delete(:body_property)
@@ -100,14 +100,14 @@ module Wistle
       def svn_repository
         return @svn_repository if @svn_repository
         
-        @svn_repository = Wistle::Model.first(:name => self.name)
-        @svn_repository ||= Wistle::Model.create(:name => self.name, :revision => 0)
+        @svn_repository = DmSvn::Model.first(:name => self.name)
+        @svn_repository ||= DmSvn::Model.create(:name => self.name, :revision => 0)
         @svn_repository.config = config
         @svn_repository
       end
       
       def sync
-        Wistle::Svn::Sync.new(svn_repository).run
+        DmSvn::Svn::Sync.new(svn_repository).run
       end
       
       # Override normal get behavior to try to get based on path if the argument

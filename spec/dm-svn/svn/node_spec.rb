@@ -1,21 +1,21 @@
 require File.join( File.dirname(__FILE__), "..", "spec_helper" )
 
-describe Wistle::Svn::Node do
+describe DmSvn::Svn::Node do
   before(:all) do
     @repos_uri = load_svn_fixture('articles_comments')
     
-    Wistle::Model.auto_migrate!
-    @ws_model = Wistle::Model.create(:name => 'MockSyncModel', :revision => 0)
-    @ws_model.config = Wistle::Config.new
+    DmSvn::Model.auto_migrate!
+    @ws_model = DmSvn::Model.create(:name => 'MockSyncModel', :revision => 0)
+    @ws_model.config = DmSvn::Config.new
     @ws_model.config.uri = @repos_uri
-    @sync = Wistle::Svn::Sync.new(@ws_model)
+    @sync = DmSvn::Svn::Sync.new(@ws_model)
     @sync.__send__(:connect, @repos_uri)
     
     @cs   = @sync.changesets[1] # revision 2
     @cs3  = @sync.changesets[2] # revision 9
     @cs9  = @sync.changesets[7] # revision 9
-    @dir  = Wistle::Svn::Node.new(@cs, "/articles")
-    @file = Wistle::Svn::Node.new(@cs3, "/articles/unpublished.txt")
+    @dir  = DmSvn::Svn::Node.new(@cs, "/articles")
+    @file = DmSvn::Svn::Node.new(@cs3, "/articles/unpublished.txt")
   end
   
   after(:all) do
@@ -42,7 +42,7 @@ describe Wistle::Svn::Node do
   end
   
   it "should remove yaml from body" do
-    Wistle::Svn::Node.new(@cs9, "/articles/turtle.txt").body.should == 'Hi, turtle.'
+    DmSvn::Svn::Node.new(@cs9, "/articles/turtle.txt").body.should == 'Hi, turtle.'
   end
   
   describe "#properties" do
@@ -66,7 +66,7 @@ describe Wistle::Svn::Node do
     end
     
     it "should get properties from yaml properties" do       
-      dir9 = Wistle::Svn::Node.new(@cs9, "/articles")
+      dir9 = DmSvn::Svn::Node.new(@cs9, "/articles")
       dir9.properties.should ==
         {
           'svn_updated_at' => dir9.date,
@@ -76,7 +76,7 @@ describe Wistle::Svn::Node do
           'random_number' => 7
         }
 
-      file9 = Wistle::Svn::Node.new(@cs9, "/articles/turtle.txt")
+      file9 = DmSvn::Svn::Node.new(@cs9, "/articles/turtle.txt")
       file9.properties.should == 
         {
           'svn_updated_at' => file9.date,
@@ -91,8 +91,8 @@ describe Wistle::Svn::Node do
   
   describe "variables from changeset" do
     before(:each) do
-      @cs = mock(Wistle::Svn::Changeset)
-      @node = Wistle::Svn::Node.new(@cs, 'path')
+      @cs = mock(DmSvn::Svn::Changeset)
+      @node = DmSvn::Svn::Node.new(@cs, 'path')
     end
     
     it "should get revision" do

@@ -1,4 +1,4 @@
-module Wistle
+module DmSvn
   module Svn
     class Sync
       

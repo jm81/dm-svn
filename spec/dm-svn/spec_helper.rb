@@ -1,9 +1,9 @@
 require File.expand_path(File.join( File.dirname(__FILE__), "..", "spec_helper" ))
-require File.expand_path(File.join( File.dirname(__FILE__), "..", "..", "lib", "wistle.rb" ))
+require File.expand_path(File.join( File.dirname(__FILE__), "..", "..", "lib", "dm-svn.rb" ))
 
 class MockArticle
   include DataMapper::Resource
-  include Wistle::Svn
+  include DmSvn::Svn
   
   property :id, Integer, :serial => true
   property :title, String
@@ -20,7 +20,7 @@ end
 
 class MockSyncModel
   include DataMapper::Resource
-  include Wistle::Svn
+  include DmSvn::Svn
   
   property :id, Integer, :serial => true
   property :title, String
@@ -31,7 +31,7 @@ end
 
 class MockCategory
   include DataMapper::Resource
-  include Wistle::Svn
+  include DmSvn::Svn
   has n, :mock_categorized_articles
   
   property :id, Integer, :serial => true
@@ -41,8 +41,8 @@ end
 
 class MockCategorizedArticle
   include DataMapper::Resource
-  include Wistle::Svn
-  belongs_to :mock_category, :wistle => true
+  include DmSvn::Svn
+  belongs_to :mock_category, :svn => true
   
   property :id, Integer, :serial => true
   property :title, String
