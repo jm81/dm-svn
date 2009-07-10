@@ -1,3 +1,7 @@
+require 'rubygems'
+require 'dm-core'
+require 'dm-aggregates' # Only needed by specs, but this seems the easiest place to require.
+require 'dm-validations'
 require 'svn/client'
 
 module Wistle

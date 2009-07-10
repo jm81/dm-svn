@@ -1,35 +1,52 @@
 require 'rubygems'
-require 'rake/rdoctask'
+require 'rake'
 
-require 'merb-core'
-require 'merb-core/tasks/merb'
+begin
+  require 'jeweler'
+  Jeweler::Tasks.new do |gem|
+    gem.name = "dm-svn"
+    gem.summary = %Q{Sync content from a Subversion repository to a DataMapper model}
+    gem.email = "jmorgan@morgancreative.net"
+    gem.homepage = "http://github.com/jm81/dm-svn"
+    gem.authors = ["Jared Morgan"]
+    gem.add_dependency('dm-core')
+    gem.add_dependency('dm-aggregates')
+    gem.add_dependency('dm-validations')
+    gem.add_dependency('jm81-svn-fixture', '>= 0.1.1')
+    # gem is a Gem::Specification... see http://www.rubygems.org/read/chapter/20 for additional settings
+  end
 
-include FileUtils
-
-# Load the basic runtime dependencies; this will include 
-# any plugins and therefore plugin rake tasks.
-init_env = ENV['MERB_ENV'] || 'rake'
-Merb.load_dependencies(:environment => init_env)
-     
-# Get Merb plugins and dependencies
-Merb::Plugins.rakefiles.each { |r| require r } 
-
-# Load any app level custom rakefile extensions from lib/tasks
-tasks_path = File.join(File.dirname(__FILE__), "lib", "tasks")
-rake_files = Dir["#{tasks_path}/*.rake"]
-rake_files.each{|rake_file| load rake_file }
-
-desc "Start runner environment"
-task :merb_env do
-  Merb.start_environment(:environment => init_env, :adapter => 'runner')
+rescue LoadError
+  puts "Jeweler (or a dependency) not available. Install it with: sudo gem install jeweler"
 end
 
 require 'spec/rake/spectask'
-require 'merb-core/test/tasks/spectasks'
-desc 'Default: run spec examples'
-task :default => 'spec'
+Spec::Rake::SpecTask.new(:spec) do |spec|
+  spec.libs << 'lib' << 'spec'
+  spec.spec_files = FileList['spec/**/*_spec.rb']
+end
 
-##############################################################################
-# ADD YOUR CUSTOM TASKS IN /lib/tasks
-# NAME YOUR RAKE FILES file_name.rake
-##############################################################################
+Spec::Rake::SpecTask.new(:rcov) do |spec|
+  spec.libs << 'lib' << 'spec'
+  spec.pattern = 'spec/**/*_spec.rb'
+  spec.rcov = true
+end
+
+
+task :default => :spec
+
+require 'rake/rdoctask'
+Rake::RDocTask.new do |rdoc|
+  if File.exist?('VERSION.yml')
+    config = YAML.load(File.read('VERSION.yml'))
+    version = "#{config[:major]}.#{config[:minor]}.#{config[:patch]}"
+  else
+    version = ""
+  end
+
+  rdoc.rdoc_dir = 'rdoc'
+  rdoc.title = "dm-svn #{version}"
+  rdoc.rdoc_files.include('README*')
+  rdoc.rdoc_files.include('lib/**/*.rb')
+end
+

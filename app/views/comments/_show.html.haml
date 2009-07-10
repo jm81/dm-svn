@@ -1,8 +1,0 @@
-%li.comment{:id => "comment_#{comment.id}"}
-  .byline
-    == #{comment.author}: #{comment.created_at}
-    == [#{link_to('Reply', reply_to(comment))}]
-  .content= comment.html
-  %ul
-    - comment.replies.each do |reply|
-      = partial 'comments/show', :comment => reply

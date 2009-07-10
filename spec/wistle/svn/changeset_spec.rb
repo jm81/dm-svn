@@ -1,6 +1,9 @@
 require File.join( File.dirname(__FILE__), "..", "spec_helper" )
 
 describe Wistle::Svn::Changeset do
+  before(:all) do
+    Wistle::Model.auto_migrate!
+  end
   
   describe "#short_path" do
     before(:each) do

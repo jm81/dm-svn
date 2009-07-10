@@ -2,6 +2,7 @@ require File.join( File.dirname(__FILE__), "spec_helper" )
 
 describe Wistle::Svn do
   before(:all) do
+    Wistle::Model.auto_migrate!
     MockArticle.auto_migrate!
   end
   
@@ -184,7 +185,7 @@ describe Wistle::Svn do
   
   describe "hooks" do
     it "should update svn_created_* properties before create" do
-      a = Article.new
+      a = MockArticle.new
       
       a.svn_updated_at = Time.parse("2008-08-10 05:00:00")
       a.svn_updated_rev = 10

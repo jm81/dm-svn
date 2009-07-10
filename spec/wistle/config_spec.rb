@@ -23,6 +23,15 @@ describe Wistle::Config do
   end
   
   it "should load config options from database.yml" do
+    Merb = Object.new
+    def Merb.root
+      '/path/to/merb'
+    end
+    
+    def Merb.env(*args)
+      :test
+    end
+    
     f = "#{Merb.root}/config/database.yml"
     yaml = File.read(File.dirname(__FILE__) + '/database.yml')
     IO.should_receive(:read).with(f).and_return(yaml)
@@ -32,5 +41,11 @@ describe Wistle::Config do
     c.password.should == 'pw1234'
     c.extension.should == 'doc'
     c.body_property.should == 'body' # Didn't change
+    Object.__send__(:remove_const, :Merb)
+  end
+  
+  after(:all) do
+    # ensure this happens
+    Object.__send__(:remove_const, :Merb) if Object.const_defined?(:Merb)
   end
 end

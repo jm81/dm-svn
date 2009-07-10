@@ -2,6 +2,7 @@ require File.join( File.dirname(__FILE__), "..", "spec_helper" )
 
 describe Wistle::Svn::Categorized do
   before(:all) do
+    Wistle::Model.auto_migrate!
     MockCategory.auto_migrate!
     MockCategorizedArticle.auto_migrate!
   end

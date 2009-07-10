@@ -7,6 +7,7 @@ describe Wistle::Svn::Sync do
   
   describe "#run" do
     before(:all) do
+      Wistle::Model.auto_migrate!
       MockSyncModel.auto_migrate!
       @repos_uri = load_svn_fixture('articles_comments')
     end
@@ -62,6 +63,7 @@ describe Wistle::Svn::Sync do
   
   describe "#run (categorized)" do
     before(:all) do
+      Wistle::Model.auto_migrate!
       MockCategory.auto_migrate!
       MockCategorizedArticle.auto_migrate!
       @repos_uri = load_svn_fixture('articles_comments')[0..-10]

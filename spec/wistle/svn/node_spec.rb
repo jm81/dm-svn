@@ -4,7 +4,7 @@ describe Wistle::Svn::Node do
   before(:all) do
     @repos_uri = load_svn_fixture('articles_comments')
     
-    Wistle::Model.all.each { |m| m.destroy }
+    Wistle::Model.auto_migrate!
     @ws_model = Wistle::Model.create(:name => 'MockSyncModel', :revision => 0)
     @ws_model.config = Wistle::Config.new
     @ws_model.config.uri = @repos_uri
