@@ -13,7 +13,6 @@ end
 Merb::BootLoader.before_app_loads do
   # This will get executed after dependencies have been loaded but before your app's classes have loaded.
   require 'lib/wistle.rb'
-  require 'lib/filters.rb'
   
   # jm81-paginate
   DataMapper::Collection.__send__(:include, Paginate::DM)
