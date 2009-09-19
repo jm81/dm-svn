@@ -5,8 +5,9 @@ require 'dm-validations'
 require 'svn/client'
 
 module DmSvn
+  VERSION = '0.2.0'
 end
 
-%w{config svn model}.each do |f|
-  require File.expand_path(File.dirname(__FILE__) + "/dm-svn/#{f}.rb")
-end
+require 'dm-svn/config'
+require 'dm-svn/svn'
+require 'dm-svn/model'

@@ -140,5 +140,5 @@ module DmSvn
 end
 
 %w{sync changeset node categorized}.each do |f|
-  require File.dirname(__FILE__) + "/svn/#{f}.rb"
+  require "dm-svn/svn/#{f}"
 end

@@ -1,3 +1,6 @@
+require 'spec_helper'
+require 'dm-svn'
+
 class MockArticle
   include DataMapper::Resource
   include DmSvn::Svn

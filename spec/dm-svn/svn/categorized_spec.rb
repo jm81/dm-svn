@@ -1,4 +1,5 @@
-require File.join( File.dirname(__FILE__), "..", "spec_helper" )
+require 'spec_helper'
+require 'dm-svn/mock_models'
 
 describe DmSvn::Svn::Categorized do
   before(:all) do
