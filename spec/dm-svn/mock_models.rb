@@ -5,7 +5,7 @@ class MockArticle
   include DataMapper::Resource
   include DmSvn::Svn
   
-  property :id, Integer, :serial => true
+  property :id, Serial
   property :title, String
   property :contents, Text, :body_property => true
 end
@@ -13,7 +13,7 @@ end
 class MockArticleNoSvn
   include DataMapper::Resource
   
-  property :id, Integer, :serial => true
+  property :id, Serial
   property :title, String
   property :contents, Text
 end
@@ -22,7 +22,7 @@ class MockSyncModel
   include DataMapper::Resource
   include DmSvn::Svn
   
-  property :id, Integer, :serial => true
+  property :id, Serial
   property :title, String
   property :body, Text, :body_property => true
   property :published_at, DateTime
@@ -34,7 +34,7 @@ class MockCategory
   include DmSvn::Svn
   has n, :mock_categorized_articles
   
-  property :id, Integer, :serial => true
+  property :id, Serial
   property :title, String
   property :random_number, Integer
 end
@@ -44,7 +44,7 @@ class MockCategorizedArticle
   include DmSvn::Svn
   belongs_to :mock_category, :svn => true
   
-  property :id, Integer, :serial => true
+  property :id, Serial
   property :title, String
   property :article, String
   property :body, Text, :body_property => true

@@ -14,7 +14,7 @@ describe DmSvn::Svn do
   it "should add svn_* properties" do
     fields = %w{name created_at updated_at created_rev updated_rev created_by updated_by}
     fields.each do | field |
-      lambda { MockArticleNoSvn.properties["svn_#{field}"] }.should raise_error(ArgumentError)
+      MockArticleNoSvn.properties["svn_#{field}"].should be_nil
       MockArticle.properties["svn_#{field}"].should be_kind_of(DataMapper::Property)
     end
   end
@@ -54,7 +54,7 @@ describe DmSvn::Svn do
     end
     
     it 'should update path, body and other properties' do
-      @node.should_receive(:body).twice.and_return('body')      
+      @node.should_receive(:body).twice.and_return('body')
       @node.should_receive(:short_path).and_return('short/path')
       @node.should_receive(:properties).and_return(
         {'title' => 'Title', 'svn_updated_by' => 'jmorgan'}
@@ -62,8 +62,8 @@ describe DmSvn::Svn do
       
       @article.should_receive(:attribute_set).with(:svn_name, 'short/path')
       @article.should_receive(:attribute_set).with('contents', 'body')
-      @article.should_receive(:attribute_set).with(:title, 'Title')
-      @article.should_receive(:attribute_set).with(:svn_updated_by, 'jmorgan')
+      @article.should_receive(:title=).with('Title')
+      @article.should_receive(:svn_updated_by=).with('jmorgan')
       
       @article.should_receive(:save)
       @article.update_from_svn(@node)
