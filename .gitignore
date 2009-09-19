@@ -20,3 +20,4 @@ src/*
 .loadpath
 lib/wistle/tmp/*
 config/recaptcha.yml
+*qt_temp*
