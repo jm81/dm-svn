@@ -10,7 +10,7 @@ module DmSvn
         svn = options.delete(:svn)
         if svn
           @svn_category = what
-          @svn_category_model = options[:class_name] || what.to_s.camel_case
+          @svn_category_model = options[:model] || options[:class_name] || what.to_s.camel_case
           include(DmSvn::Svn::Categorized)
         end
         
