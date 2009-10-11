@@ -6,6 +6,10 @@ begin
   Jeweler::Tasks.new do |gem|
     gem.name = "dm-svn"
     gem.summary = %Q{Sync content from a Subversion repository to a DataMapper model}
+    gem.description = %Q{dm-svn allows you to store data in a Subversion
+repository, then sync that data to a DataMapper model (for example, to a
+relational database. Essentially, it allows you app quicker access to the
+Subversion data.}
     gem.email = "jmorgan@morgancreative.net"
     gem.homepage = "http://github.com/jm81/dm-svn"
     gem.authors = ["Jared Morgan"]
@@ -15,7 +19,7 @@ begin
     gem.add_dependency('jm81-svn-fixture', '>= 0.1.1')
     # gem is a Gem::Specification... see http://www.rubygems.org/read/chapter/20 for additional settings
   end
-
+  Jeweler::GemcutterTasks.new
 rescue LoadError
   puts "Jeweler (or a dependency) not available. Install it with: sudo gem install jeweler"
 end
