@@ -117,7 +117,7 @@ module DmSvn
       # clarity.
       def yaml_split
         data[0].gsub!("\r", "")
-        ary = data[0].split("\n...\n")
+        ary = data[0].split(/\n\.\.\.\n|\n---\n/,2)
         ary[1] = ary[1].lstrip
         ary
       end
