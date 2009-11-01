@@ -5,11 +5,11 @@
 
 Gem::Specification.new do |s|
   s.name = %q{dm-svn}
-  s.version = "0.2.1"
+  s.version = "0.2.2"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Jared Morgan"]
-  s.date = %q{2009-10-11}
+  s.date = %q{2009-11-01}
   s.description = %q{dm-svn allows you to store data in a Subversion
 repository, then sync that data to a DataMapper model (for example, to a
 relational database. Essentially, it allows you app quicker access to the
