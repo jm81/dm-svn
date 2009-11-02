@@ -16,7 +16,7 @@ Subversion data.}
     gem.add_dependency('dm-core', '>= 0.10.0')
     gem.add_dependency('dm-aggregates', '>= 0.10.0')
     gem.add_dependency('dm-validations', '>= 0.10.0')
-    gem.add_dependency('jm81-svn-fixture', '>= 0.1.1')
+    gem.add_dependency('svn-fixture', '>= 0.1.2')
     # gem is a Gem::Specification... see http://www.rubygems.org/read/chapter/20 for additional settings
   end
   Jeweler::GemcutterTasks.new
