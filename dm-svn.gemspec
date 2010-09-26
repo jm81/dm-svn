@@ -5,11 +5,11 @@
 
 Gem::Specification.new do |s|
   s.name = %q{dm-svn}
-  s.version = "0.2.3"
+  s.version = "0.2.4"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Jared Morgan"]
-  s.date = %q{2010-09-25}
+  s.date = %q{2010-09-26}
   s.description = %q{dm-svn allows you to store data in a Subversion
 repository, then sync that data to a DataMapper model (for example, to a
 relational database. Essentially, it allows you app quicker access to the
@@ -66,20 +66,20 @@ Subversion data.}
     s.specification_version = 3
 
     if Gem::Version.new(Gem::VERSION) >= Gem::Version.new('1.2.0') then
-      s.add_runtime_dependency(%q<dm-core>, [">= 0.10.0"])
-      s.add_runtime_dependency(%q<dm-aggregates>, [">= 0.10.0"])
-      s.add_runtime_dependency(%q<dm-validations>, [">= 0.10.0"])
+      s.add_runtime_dependency(%q<dm-core>, ["~> 1.0.2"])
+      s.add_runtime_dependency(%q<dm-aggregates>, ["~> 1.0.2"])
+      s.add_runtime_dependency(%q<dm-validations>, ["~> 1.0.2"])
       s.add_runtime_dependency(%q<svn-fixture>, [">= 0.1.2"])
     else
-      s.add_dependency(%q<dm-core>, [">= 0.10.0"])
-      s.add_dependency(%q<dm-aggregates>, [">= 0.10.0"])
-      s.add_dependency(%q<dm-validations>, [">= 0.10.0"])
+      s.add_dependency(%q<dm-core>, ["~> 1.0.2"])
+      s.add_dependency(%q<dm-aggregates>, ["~> 1.0.2"])
+      s.add_dependency(%q<dm-validations>, ["~> 1.0.2"])
       s.add_dependency(%q<svn-fixture>, [">= 0.1.2"])
     end
   else
-    s.add_dependency(%q<dm-core>, [">= 0.10.0"])
-    s.add_dependency(%q<dm-aggregates>, [">= 0.10.0"])
-    s.add_dependency(%q<dm-validations>, [">= 0.10.0"])
+    s.add_dependency(%q<dm-core>, ["~> 1.0.2"])
+    s.add_dependency(%q<dm-aggregates>, ["~> 1.0.2"])
+    s.add_dependency(%q<dm-validations>, ["~> 1.0.2"])
     s.add_dependency(%q<svn-fixture>, [">= 0.1.2"])
   end
 end
