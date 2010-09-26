@@ -8,7 +8,7 @@ module DmSvn
         # svn_name could be just a name, or a full path, always excluding
         # extension. If directories are stored in a model (not yet supported),
         # it contains the full path (from the config.uri).
-        klass.property :svn_name, DataMapper::Types::Text, :lazy => false
+        klass.property :svn_name, DataMapper::Property::Text, :lazy => false
         klass.property :svn_created_at, DateTime
         klass.property :svn_updated_at, DateTime
         klass.property :svn_created_rev, String
