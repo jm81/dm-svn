@@ -5,7 +5,7 @@ require 'dm-validations'
 require 'svn/client'
 
 module DmSvn
-  VERSION = '0.2.3'
+  VERSION = '0.2.4'
 end
 
 require 'dm-svn/config'
